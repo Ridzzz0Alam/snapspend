@@ -18,7 +18,7 @@ export interface LineItem {
   unitPrice?: number | null;
   /** Ft, integer. */
   lineTotal: number;
-  category?: string;
+  category?: string | null;
 }
 
 export interface Adjustment {

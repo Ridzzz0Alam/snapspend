@@ -1,65 +1,14 @@
 /**
- * Golden-test data from SPEC §6. Also reused by the dev seed script in Phase 2.
- * Expected strings are built with explicit \u escapes so the × (U+00D7) and − (U+2212)
- * characters can't be silently swapped for ASCII by an editor.
+ * Expected Daily Log output for the SPEC §6 golden tests. The receipt data lives in
+ * src/db/seedData.ts so the dev seed and the tests share it. The × (U+00D7) and − (U+2212)
+ * characters are checked by code point in format.test.ts.
  */
-import type { LineItem, ReceiptData } from '@/lib/types';
+export { golden1Receipts, golden2Receipts, golden3Receipts } from '@/db/seedData';
 
 const X = '×';
 const M = '−';
 
-const pcs = (
-  nameEn: string,
-  sizeLabel: string | null,
-  quantity: number,
-  unitPrice: number,
-  lineTotal: number,
-): LineItem => ({ nameEn, sizeLabel, quantity, unit: 'pcs', unitPrice, lineTotal });
-
-const kg = (
-  nameEn: string,
-  sizeLabel: string | null,
-  quantity: number,
-  unitPrice: number,
-  lineTotal: number,
-): LineItem => ({ nameEn, sizeLabel, quantity, unit: 'kg', unitPrice, lineTotal });
-
 // ---- Golden test 1 ---------------------------------------------------------
-
-export const golden1Receipts: ReceiptData[] = [
-  {
-    kind: 'scanned',
-    store: 'ALDI',
-    date: '2026-11-02',
-    time: '10:15',
-    printedTotal: 847,
-    items: [
-      pcs('Sauce beans', '420g', 1, 239, 239),
-      pcs('Sauce beans', '420g', 1, 239, 239),
-      pcs('Toast bread', '500g', 1, 369, 369),
-    ],
-    adjustments: [],
-  },
-  {
-    kind: 'scanned',
-    store: 'SPAR (Interspar)',
-    date: '2026-11-02',
-    time: '17:40',
-    printedTotal: 3894,
-    items: [
-      pcs('Corn snack', '100g', 2, 155, 310),
-      pcs('Peeled tomatoes', '400g', 1, 259, 259),
-      kg('Banana', null, 1.294, 449, 581),
-      pcs('Metal scourers', '3pcs', 1, 299, 299),
-      pcs('Red onion', '1kg', 2, 277, 554),
-      pcs('Milk chocolate bar', '100g', 2, 459, 918),
-      pcs('UHT milk 2.8%', '1L', 2, 285, 570),
-      pcs('Natural yogurt 3%', '175g', 1, 85, 85),
-      pcs('Chocolate donut', null, 2, 159, 318),
-    ],
-    adjustments: [],
-  },
-];
 
 export const golden1Expected = [
   '02/11/2026',
@@ -69,36 +18,6 @@ export const golden1Expected = [
 ].join('\n');
 
 // ---- Golden test 2 ---------------------------------------------------------
-
-export const golden2Receipts: ReceiptData[] = [
-  {
-    kind: 'manual',
-    store: 'Yettel Recharge',
-    date: '2026-11-13',
-    time: null,
-    printedTotal: 3000,
-    items: [],
-    adjustments: [],
-  },
-  {
-    kind: 'total_only',
-    store: 'Kashmiri Bazar',
-    date: '2026-11-06',
-    time: '18:30',
-    printedTotal: 6490,
-    items: [],
-    adjustments: [],
-  },
-  {
-    kind: 'scanned',
-    store: 'SPAR',
-    date: '2026-11-06',
-    time: '09:05',
-    printedTotal: 889,
-    items: [pcs('Sweet corn', '285g', 1, 299, 299), pcs('Chopped tomatoes', null, 2, 295, 590)],
-    adjustments: [],
-  },
-];
 
 export const golden2Expected = [
   '06/11/2026',
@@ -114,25 +33,6 @@ export const golden2Expected = [
 ].join('\n');
 
 // ---- Golden test 3 ---------------------------------------------------------
-
-export const golden3Receipts: ReceiptData[] = [
-  {
-    kind: 'scanned',
-    store: 'TESCO',
-    date: '2026-11-07',
-    time: '12:00',
-    printedTotal: 1366,
-    items: [
-      pcs('Dates', '200g', 1, 449, 449),
-      pcs('Milka Alpine milk chocolate', '90g', 2, 699, 1398),
-      pcs('Bio bag', null, 1, 19, 19),
-    ],
-    adjustments: [
-      { type: 'discount', label: 'Clubcard discount', amount: 100 },
-      { type: 'discount', label: 'Clubcard discount', amount: 400 },
-    ],
-  },
-];
 
 export const golden3Expected = [
   '07/11/2026',
