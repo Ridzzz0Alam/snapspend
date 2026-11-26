@@ -33,10 +33,13 @@ _(empty — write blockers here)_
 - How to verify: run `npx tsc --noEmit` and `npx jest`. Both pass. `__tests__/format.test.ts` checks golden tests 1–3 byte for byte, and also checks that the fixture strings match the blocks in `docs/SPEC.md` §6 exactly. No UI in this phase. Started before Phase 0's device item was done (DECISIONS D22).
 
 ## Phase 2 — Database
-- [ ] drizzle schema per SPEC §4, migrations via drizzle-kit, run on app start
-- [ ] Repository functions: createReceiptWithItems (transaction), updateReceipt, deleteReceipt, listByDateRange, listItems(filters, sort)
-- [ ] Seed script (dev only) that loads the golden-test data so screens have something to show
+- [x] drizzle schema per SPEC §4, migrations via drizzle-kit, run on app start
+- [x] Repository functions: createReceiptWithItems (transaction), updateReceipt, deleteReceipt, listByDateRange, listItems(filters, sort)
+- [x] Seed script (dev only) that loads the golden-test data so screens have something to show
 - How to verify:
+  1. `npx tsc --noEmit` and `npx jest` pass. `__tests__/repository.test.ts` runs the real migrations on an in-memory SQLite (sql.js). It covers create/update/delete, cascades, rollback, date-range and item listing, and runs the golden receipts through the database → `formatDailyLog` → byte-for-byte SPEC §6 output.
+  2. On the phone (checked on the OnePlus 7, 2026-11-26): open the app; it starts normally, so the migrations ran. Go to **Tab Two** → "Receipts stored: 0" → **Load sample data** → the count goes to 6 straight away (live query) and the Daily Log for 02/11–13/11/2026 appears → **Clear sample data** → back to 0.
+  3. Adding expo-sqlite/expo-crypto needed one native rebuild (`npx expo run:android`, 1m 27s cached). After changing `src/db/schema.ts`, run `npm run db:generate` and commit the new migration.
 
 ## Phase 3 — Settings + Gemini client
 - [ ] Settings screen: API key in expo-secure-store (masked), model name, "Test key" button (tiny text-only request)
