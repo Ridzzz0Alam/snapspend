@@ -23,13 +23,13 @@ _(empty — write blockers here)_
 - How to verify:
 
 ## Phase 1 — Pure logic + golden tests (no UI)
-- [ ] `src/lib/money.ts`: `formatFt(n)` with `.` thousands separators; `parseHuf(str)` for "1 059", "1.059", "1059 Ft"
-- [ ] `src/lib/format.ts`: `formatDailyLog(receipts, { grandTotal })` per SPEC §6
-- [ ] Golden tests 1, 2 and 3 from SPEC §6 pass byte for byte
-- [ ] `src/lib/totals.ts`: computedTotal, day totals, sanity-check diff
-- [ ] `src/lib/receiptSchema.ts`: zod schema mirroring SPEC §5 + tests with valid/invalid fixtures
-- [ ] `src/lib/normalize.ts`: normalizedKey + store alias application, tested
-- How to verify:
+- [x] `src/lib/money.ts`: `formatFt(n)` with `.` thousands separators; `parseHuf(str)` for "1 059", "1.059", "1059 Ft"
+- [x] `src/lib/format.ts`: `formatDailyLog(receipts, { grandTotal })` per SPEC §6
+- [x] Golden tests 1, 2 and 3 from SPEC §6 pass byte for byte
+- [x] `src/lib/totals.ts`: computedTotal, day totals, sanity-check diff
+- [x] `src/lib/receiptSchema.ts`: zod schema mirroring SPEC §5 + tests with valid/invalid fixtures
+- [x] `src/lib/normalize.ts`: normalizedKey + store alias application, tested
+- How to verify: run `npx tsc --noEmit` and `npx jest`. Both pass. `__tests__/format.test.ts` checks golden tests 1–3 byte for byte, and also checks that the fixture strings match the blocks in `docs/SPEC.md` §6 exactly. No UI in this phase. Started before Phase 0's device item was done (DECISIONS D22).
 
 ## Phase 2 — Database
 - [ ] drizzle schema per SPEC §4, migrations via drizzle-kit, run on app start

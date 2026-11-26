@@ -34,3 +34,15 @@ Decisions already made. Don't re-litigate; add new entries at the bottom with a 
 ### Open (decide when the phase arrives)
 - **O1. Items tracker tab.** CLAUDE.md lists tabs index, scan, log, insights, settings, but SPEC §2.5 adds an Items tracker. Decide in Phase 6 (proposal: add an `items` tab, 6 tabs total).
 - **O2. Default Gemini model id.** Check the Gemini API docs for the current stable Flash model in Phase 3.
+
+## 2026-11-26 — Phase 1
+
+- **D22. Phase 1 started before Phase 0 was finished**, at the owner's request. The device-build item of Phase 0 stays open and is done when the phone is paired. Phase 1 needs no device.
+- **D23. `formatDailyLog` output** joins lines with `\n` and has no trailing newline. No receipts gives `''`, even with GRAND TOTAL on.
+- **D24. Daily Log totals are computed from items and adjustments** when the log is built, not read from the stored `computedTotal` column, so an edited item always shows up in the log.
+- **D25. Money helpers.** `formatAmount(n)` gives `3.894` (used inside the log); `formatFt(n)` gives `3.894 Ft` (UI). Non-integers are rounded. `parseHuf` returns `null` for anything it can't read. Spaces and `.` followed by groups of exactly 3 digits are thousands separators, `,` is the decimal separator, and a lone `.` with other than 3 digits after it is a decimal point (`12.5`). Decimals are rounded to whole forints.
+- **D26. Sanity check passes** when computed equals printed, or when printed + redeemed points equals computed (the receipt printed the total after Repont, SPEC §5).
+- **D27. Schema leniency.** The zod schema rejects wrong types, non-integer money, bad units, quantity ≤ 0, negative adjustment amounts and invalid dates. It quietly fixes harmless things: missing optional fields → `null`, `HH:MM:SS` → `HH:MM`, masked card number → last 4 digits (or `null`), blank strings → `null`. `lineTotal` may be negative (returned items). Unknown categories are not rejected; `normalizeReceipt` maps them to `Other`.
+- **D28. Category is named `Pantry`.** The "(canned, rice, oil, spices)" in SPEC §3 is a description, not part of the name.
+- **D29. `normalizedKey`** = English name + size label, lowercased, whitespace collapsed. The size isn't appended again if the name already ends with it.
+- **D30. `@types/node`** is in `tsconfig.json` `types` so tests can read `docs/SPEC.md`. A test checks that the golden fixtures match the SPEC §6 blocks exactly.
