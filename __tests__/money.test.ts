@@ -52,10 +52,7 @@ describe('parseHuf', () => {
     expect(parseHuf(s)).toBe(expected);
   });
 
-  it.each(['', 'Ft', 'abc', '12a', '1.05.9', '1,2,3', '1.059.5', '-', '1,'])(
-    '%p → null',
-    (s) => {
-      expect(parseHuf(s)).toBeNull();
-    },
-  );
+  it.each(['', 'Ft', 'abc', '12a', '1.05.9', '1,2,3', '1.059.5', '-', '1,'])('%p → null', (s) => {
+    expect(parseHuf(s)).toBeNull();
+  });
 });
