@@ -1,9 +1,12 @@
 import { StyleSheet } from 'react-native';
 
+import { DevDataPanel } from '@/components/DevDataPanel';
 import EditScreenInfo from '@/components/EditScreenInfo';
 import { Text, View } from '@/components/Themed';
 
 export default function TabTwoScreen() {
+  if (__DEV__) return <DevDataPanel />;
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Tab Two</Text>
