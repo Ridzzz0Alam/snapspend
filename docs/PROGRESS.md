@@ -13,6 +13,10 @@ _(empty — write blockers here)_
 - [x] TypeScript strict, ESLint + Prettier, path alias `@/` → `src/`
 - [x] `app.json`: name "Snap Spend", slug `snap-spend`, android.package `com.snapspend.app`, orientation portrait
 - [ ] Install expo-dev-client; `npx expo run:android` builds and launches on a device
+  - **Resume here (paused 2026-11-26).** Done: `expo-dev-client` installed; JDK 17 (`C:\Program Files\Eclipse Adoptium\jdk-17.0.21.10002-hotspot`) and Android Studio (`C:\Program Files\Android\Android Studio`) installed via winget.
+  - Remaining, owner: open Android Studio once and finish the setup wizard (Standard install → downloads the SDK to `%LOCALAPPDATA%\Android\Sdk`).
+  - Remaining, owner: on the phone, Developer options → Wireless debugging → Pair device with pairing code; send the agent the IP:port + code (same Wi-Fi as the PC, see DECISIONS D9).
+  - Remaining, agent: set `ANDROID_HOME` + `JAVA_HOME` (JDK 17) for builds, add `platform-tools` to PATH, `adb pair` / `adb connect`, run `npx expo run:android`, confirm launch, fill in "How to verify", tick this item.
 - [x] Jest (`jest-expo`) configured with one passing sample test
 - [x] `.gitignore` covers `.env*`, `*.keystore`, `android/`, `ios/` (prebuild output) unless decided otherwise in DECISIONS.md
 - [x] Create `docs/DECISIONS.md`
