@@ -15,7 +15,7 @@ _(empty — write blockers here)_
 - [ ] Install expo-dev-client; `npx expo run:android` builds and launches on a device
 - [x] Jest (`jest-expo`) configured with one passing sample test
 - [x] `.gitignore` covers `.env*`, `*.keystore`, `android/`, `ios/` (prebuild output) unless decided otherwise in DECISIONS.md
-- [ ] Create `docs/DECISIONS.md`
+- [x] Create `docs/DECISIONS.md`
 - How to verify:
 
 ## Phase 1 — Pure logic + golden tests (no UI)
