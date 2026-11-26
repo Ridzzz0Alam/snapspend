@@ -42,6 +42,7 @@ _(empty — write blockers here)_
   3. Adding expo-sqlite/expo-crypto needed one native rebuild (`npx expo run:android`, 1m 27s cached). After changing `src/db/schema.ts`, run `npm run db:generate` and commit the new migration.
 
 ## Phase 3 — Settings + Gemini client
+- [ ] (Sync prep, DECISIONS D44) Soft delete: `receipts.deletedAt` + migration; `deleteReceipt` sets it; every list/total query skips deleted rows; tests updated
 - [ ] Settings screen: API key in expo-secure-store (masked), model name, "Test key" button (tiny text-only request)
 - [ ] `src/lib/gemini.ts`: build request, fetch with timeout + one retry, parse → zod → typed result; errors as typed results not throws
 - [ ] Unit tests with mocked fetch: success, malformed JSON, 400, 429, timeout
@@ -73,11 +74,20 @@ _(empty — write blockers here)_
 - How to verify:
 
 ## Phase 8 — Backup, polish, release APK
-- [ ] CSV export (items), JSON backup export/import (round-trip test)
+- [ ] CSV export (items), JSON backup export/import (round-trip test); import **merges** by id + `updatedAt` (D44)
 - [ ] Store alias + category editors in Settings
 - [ ] Dark/light theme, empty states, loading and error states everywhere
 - [ ] App icon + splash
 - [ ] Release signing with a local keystore (kept out of git); `cd android && ./gradlew assembleRelease` produces an APK
 - [ ] Install and smoke-test on **both** S23 Ultra and OnePlus 7 (Android 12)
 - [ ] `README.md`: setup, run, build APK, where the key goes, backup instructions
+- How to verify:
+
+## Phase 9 — Two-phone cloud sync (DECISIONS D43)
+- [ ] Choose the sync approach (own small API vs. a ready-made SQLite↔Postgres sync service); check current Expo + drizzle support; record in DECISIONS
+- [ ] Neon project + schema; credentials only on the server/sync service, never in the APK
+- [ ] Sign-in so only the owner's phones can sync
+- [ ] Background sync of receipts, items, adjustments, store aliases (incl. soft deletes); last write wins by `updatedAt`
+- [ ] Sync status in Settings (last synced, errors, "Sync now")
+- [ ] Test with both phones: add, edit and delete on each and confirm both match, including after being offline
 - How to verify:
