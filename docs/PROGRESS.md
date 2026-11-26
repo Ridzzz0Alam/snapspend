@@ -10,7 +10,7 @@ _(empty — write blockers here)_
 
 ## Phase 0 — Project setup
 - [x] `npx create-expo-app@latest snap-spend --template` (TypeScript, Expo Router tabs) in this folder
-- [ ] TypeScript strict, ESLint + Prettier, path alias `@/` → `src/`
+- [x] TypeScript strict, ESLint + Prettier, path alias `@/` → `src/`
 - [ ] `app.json`: name "Snap Spend", slug `snap-spend`, android.package `com.snapspend.app`, orientation portrait
 - [ ] Install expo-dev-client; `npx expo run:android` builds and launches on a device
 - [ ] Jest (`jest-expo`) configured with one passing sample test
