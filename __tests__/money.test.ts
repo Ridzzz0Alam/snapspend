@@ -21,9 +21,22 @@ describe('formatAmount', () => {
 });
 
 describe('formatFt', () => {
-  it('appends " Ft"', () => {
-    expect(formatFt(3894)).toBe('3.894 Ft');
-    expect(formatFt(847)).toBe('847 Ft');
+  it.each([
+    [0, '0.00 Ft'],
+    [19, '19.00 Ft'],
+    [847, '847.00 Ft'],
+    [1000, '1,000.00 Ft'],
+    [3894, '3,894.00 Ft'],
+    [10076, '10,076.00 Ft'],
+    [1234567, '1,234,567.00 Ft'],
+    [-1250, '-1,250.00 Ft'],
+    [581.006, '581.00 Ft'],
+  ])('%p → %p', (n, expected) => {
+    expect(formatFt(n)).toBe(expected);
+  });
+
+  it('round-trips through parseHuf', () => {
+    for (const n of [0, 19, 847, 3894, 1234567, -1250]) expect(parseHuf(formatFt(n))).toBe(n);
   });
 });
 
@@ -48,11 +61,31 @@ describe('parseHuf', () => {
     ['−250 Ft', -250],
     ['0', 0],
     ['  847  ', 847],
+    ['3,894.00 Ft', 3894],
+    ['3,894.00', 3894],
+    ['1,059', 1059],
+    ['1,234,567', 1234567],
+    ['1,234,567.49', 1234567],
+    ['1.059,50', 1060],
+    ['847.00', 847],
   ])('%p → %p', (s, expected) => {
     expect(parseHuf(s)).toBe(expected);
   });
 
-  it.each(['', 'Ft', 'abc', '12a', '1.05.9', '1,2,3', '1.059.5', '-', '1,'])('%p → null', (s) => {
+  it.each([
+    '',
+    'Ft',
+    'abc',
+    '12a',
+    '1.05.9',
+    '1,2,3',
+    '1.059.5',
+    '-',
+    '1,',
+    '1,05.00',
+    '3,894.0.0',
+    '1.234,56.7',
+  ])('%p → null', (s) => {
     expect(parseHuf(s)).toBeNull();
   });
 });
