@@ -13,7 +13,7 @@ _(empty — write blockers here)_
 - [x] TypeScript strict, ESLint + Prettier, path alias `@/` → `src/`
 - [x] `app.json`: name "Snap Spend", slug `snap-spend`, android.package `com.snapspend.app`, orientation portrait
 - [ ] Install expo-dev-client; `npx expo run:android` builds and launches on a device
-- [ ] Jest (`jest-expo`) configured with one passing sample test
+- [x] Jest (`jest-expo`) configured with one passing sample test
 - [ ] `.gitignore` covers `.env*`, `*.keystore`, `android/`, `ios/` (prebuild output) unless decided otherwise in DECISIONS.md
 - [ ] Create `docs/DECISIONS.md`
 - How to verify:
