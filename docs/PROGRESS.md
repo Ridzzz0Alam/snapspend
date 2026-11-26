@@ -12,15 +12,16 @@ _(empty — write blockers here)_
 - [x] `npx create-expo-app@latest snap-spend --template` (TypeScript, Expo Router tabs) in this folder
 - [x] TypeScript strict, ESLint + Prettier, path alias `@/` → `src/`
 - [x] `app.json`: name "Snap Spend", slug `snap-spend`, android.package `com.snapspend.app`, orientation portrait
-- [ ] Install expo-dev-client; `npx expo run:android` builds and launches on a device
-  - **Resume here (paused 2026-11-26).** Done: `expo-dev-client` installed; JDK 17 (`C:\Program Files\Eclipse Adoptium\jdk-17.0.21.10002-hotspot`) and Android Studio (`C:\Program Files\Android\Android Studio`) installed via winget.
-  - Remaining, owner: open Android Studio once and finish the setup wizard (Standard install → downloads the SDK to `%LOCALAPPDATA%\Android\Sdk`).
-  - Remaining, owner: on the phone, Developer options → Wireless debugging → Pair device with pairing code; send the agent the IP:port + code (same Wi-Fi as the PC, see DECISIONS D9).
-  - Remaining, agent: set `ANDROID_HOME` + `JAVA_HOME` (JDK 17) for builds, add `platform-tools` to PATH, `adb pair` / `adb connect`, run `npx expo run:android`, confirm launch, fill in "How to verify", tick this item.
+- [x] Install expo-dev-client; `npx expo run:android` builds and launches on a device (OnePlus 7, Android 12, 2026-11-26)
 - [x] Jest (`jest-expo`) configured with one passing sample test
 - [x] `.gitignore` covers `.env*`, `*.keystore`, `android/`, `ios/` (prebuild output) unless decided otherwise in DECISIONS.md
 - [x] Create `docs/DECISIONS.md`
 - How to verify:
+  1. One-time machine setup: JDK 17, plus the Android SDK in `%LOCALAPPDATA%\Android\Sdk` with platform-tools, `platforms/android-37.0`, `build-tools;37.0.0`, `ndk;27.1.12297006` and `cmake/3.31.6` (DECISIONS D33, D35).
+  2. Phone: Developer options → Wireless debugging (same Wi-Fi as the PC). The first time only, `adb pair <ip>:<pairing-port> <code>`. Then `adb connect <ip>:<port>`, using the port from the main Wireless debugging screen, which changes each time it's toggled.
+  3. In PowerShell: `$env:JAVA_HOME="C:\Program Files\Eclipse Adoptium\jdk-17.0.21.10002-hotspot"; $env:ANDROID_HOME="$env:LOCALAPPDATA\Android\Sdk"; npx expo run:android`. The first build takes about 10–20 minutes; cached rebuilds take a few minutes.
+  4. The app installs, opens and shows the template "Tab One" screen. For JS-only work afterwards, `npx expo start --dev-client` is enough (no rebuild needed).
+  5. `npx tsc --noEmit` and `npx jest` pass.
 
 ## Phase 1 — Pure logic + golden tests (no UI)
 - [x] `src/lib/money.ts`: `formatFt(n)` with `.` thousands separators; `parseHuf(str)` for "1 059", "1.059", "1059 Ft"
