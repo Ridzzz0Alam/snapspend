@@ -50,7 +50,7 @@ _(empty — write blockers here)_
 
 ## Phase 4 — Scan → Review → Save
 - [ ] Scanner via react-native-document-scanner-plugin (multi-page) + gallery fallback via expo-image-picker (multi-select = batch queue)
-- [ ] Compress with expo-image-manipulator, copy originals into app storage
+- [ ] Compress with expo-image-manipulator; save **the compressed copy** (not the original) in app storage (D45)
 - [ ] Review screen with editable rows, adjustments, category picker, sanity-check banner, duplicate warning
 - [ ] Save in a single transaction; Retry and Discard work
 - [ ] Manual "Add expense" form (kind manual / total_only)
@@ -76,6 +76,7 @@ _(empty — write blockers here)_
 ## Phase 8 — Backup, polish, release APK
 - [ ] CSV export (items), JSON backup export/import (round-trip test); import **merges** by id + `updatedAt` (D44)
 - [ ] Store alias + category editors in Settings
+- [ ] Image retention setting: delete receipt images older than Never / 6 months / 1 year; data stays (D46)
 - [ ] Dark/light theme, empty states, loading and error states everywhere
 - [ ] App icon + splash
 - [ ] Release signing with a local keystore (kept out of git); `cd android && ./gradlew assembleRelease` produces an APK
@@ -84,6 +85,7 @@ _(empty — write blockers here)_
 - How to verify:
 
 ## Phase 9 — Two-phone cloud sync (DECISIONS D43)
+- [ ] Decide whether receipt images sync too (needs file storage, not Neon) (D46)
 - [ ] Choose the sync approach (own small API vs. a ready-made SQLite↔Postgres sync service); check current Expo + drizzle support; record in DECISIONS
 - [ ] Neon project + schema; credentials only on the server/sync service, never in the APK
 - [ ] Sign-in so only the owner's phones can sync
