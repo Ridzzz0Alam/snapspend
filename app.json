@@ -34,7 +34,8 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
-      ]
+      ],
+      "./plugins/withArm64Only"
     ],
     "experiments": {
       "typedRoutes": true
