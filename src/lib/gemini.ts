@@ -4,13 +4,22 @@
  * or included in an error message.
  */
 
+import { buildReceiptPrompt, RECEIPT_RESPONSE_SCHEMA } from './receiptPrompt';
+import { validateReceipt, type GeminiReceipt } from './receiptSchema';
+
 export const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta';
 
 /** Current stable Gemini Flash model (checked 2026-11-28, DECISIONS D48). Editable in Settings. */
 export const DEFAULT_GEMINI_MODEL = 'gemini-3.8-flash';
 
-/** Timeout for the Settings "Test key" request; receipt extraction uses SPEC §5's 60s. */
+/** Timeout for the Settings "Test key" request. */
 export const TEST_KEY_TIMEOUT_MS = 30_000;
+
+/** Receipt extraction timeout (SPEC §5). */
+export const RECEIPT_TIMEOUT_MS = 60_000;
+
+/** Wait before the single automatic retry on 429 / 5xx (SPEC §5). */
+export const RETRY_DELAY_MS = 2_000;
 
 export type GeminiErrorKind =
   | 'no_key'
@@ -21,7 +30,10 @@ export type GeminiErrorKind =
   | 'server'
   | 'network'
   | 'timeout'
-  | 'bad_response';
+  | 'bad_response'
+  | 'blocked'
+  | 'empty_response'
+  | 'invalid_receipt';
 
 export interface GeminiError {
   kind: GeminiErrorKind;
@@ -31,6 +43,10 @@ export interface GeminiError {
   status?: number;
   /** Raw message from the API or the runtime, for a "details" line. Never contains the key. */
   detail?: string;
+  /** invalid_receipt: what failed zod validation (`path: message`). */
+  issues?: string[];
+  /** invalid_receipt: the model's answer text, so the Review screen can offer a manual edit. */
+  rawText?: string;
 }
 
 export type GeminiResult<T> = { ok: true; value: T } | { ok: false; error: GeminiError };
@@ -210,4 +226,153 @@ export async function testApiKey({
     { apiKey: key, model: modelName, fetchImpl, timeoutMs },
   );
   return result.ok ? { ok: true, value: { model: modelName } } : result;
+}
+
+// ---- Receipt extraction (SPEC §5) ------------------------------------------------
+
+export interface ExtractReceiptOptions extends GeminiRequestOptions {
+  /** One base64 JPEG per page (already compressed), in page order. */
+  images: readonly string[];
+  /** Category list for the prompt; defaults to DEFAULT_CATEGORIES. */
+  categories?: readonly string[];
+  retryDelayMs?: number;
+  /** Injected for tests. */
+  sleep?: (ms: number) => Promise<void>;
+}
+
+export interface ExtractedReceipt {
+  /** Validated (zod) receipt, before store aliases / category coercion (normalizeReceipt). */
+  receipt: GeminiReceipt;
+  /** The answer text exactly as received; stored as `rawGeminiJson`. */
+  rawJson: string;
+}
+
+const defaultSleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+/** The generateContent body for a receipt: prompt + one inline JPEG per page, JSON output. */
+export function buildReceiptRequest(images: readonly string[], categories?: readonly string[]) {
+  return {
+    contents: [
+      {
+        role: 'user',
+        parts: [
+          { text: buildReceiptPrompt(categories) },
+          ...images.map((data) => ({ inline_data: { mime_type: 'image/jpeg', data } })),
+        ],
+      },
+    ],
+    generationConfig: {
+      temperature: 0.1,
+      responseMimeType: 'application/json',
+      responseSchema: RECEIPT_RESPONSE_SCHEMA,
+    },
+  };
+}
+
+interface GenerateContentBody {
+  promptFeedback?: { blockReason?: string };
+  candidates?: {
+    finishReason?: string;
+    content?: { parts?: { text?: string; thought?: boolean }[] };
+  }[];
+}
+
+const BLOCKED_FINISH = new Set(['SAFETY', 'RECITATION', 'BLOCKLIST', 'PROHIBITED_CONTENT', 'SPII']);
+
+/** Pulls the answer text out of a generateContent body (thought parts skipped). */
+export function answerText(body: unknown): GeminiResult<{ text: string; truncated: boolean }> {
+  const b = (body ?? {}) as GenerateContentBody;
+  const blockReason = b.promptFeedback?.blockReason;
+  if (blockReason) {
+    return {
+      ok: false,
+      error: {
+        kind: 'blocked',
+        detail: blockReason,
+        message: 'Gemini refused to read this image.',
+      },
+    };
+  }
+  const candidate = b.candidates?.[0];
+  const finish = candidate?.finishReason;
+  if (finish && BLOCKED_FINISH.has(finish)) {
+    return {
+      ok: false,
+      error: { kind: 'blocked', detail: finish, message: 'Gemini refused to read this image.' },
+    };
+  }
+  const text = (candidate?.content?.parts ?? [])
+    .filter((p) => !p.thought && typeof p.text === 'string')
+    .map((p) => p.text)
+    .join('');
+  if (!text.trim()) {
+    return {
+      ok: false,
+      error: {
+        kind: 'empty_response',
+        detail: finish,
+        message: 'Gemini sent an empty answer. Try again.',
+      },
+    };
+  }
+  return { ok: true, value: { text, truncated: finish === 'MAX_TOKENS' } };
+}
+
+const RETRYABLE: ReadonlySet<GeminiErrorKind> = new Set(['rate_limited', 'server']);
+
+/**
+ * Reads a receipt: one request, one automatic retry on 429 / 5xx (after `retryDelayMs`), then the
+ * answer is parsed and validated with zod. Network failures and timeouts are not retried (the
+ * user can tap Retry). Never throws.
+ */
+export async function extractReceipt({
+  apiKey,
+  model,
+  images,
+  categories,
+  fetchImpl,
+  timeoutMs = RECEIPT_TIMEOUT_MS,
+  retryDelayMs = RETRY_DELAY_MS,
+  sleep = defaultSleep,
+}: ExtractReceiptOptions): Promise<GeminiResult<ExtractedReceipt>> {
+  const key = apiKey.trim();
+  const modelName = model.trim() || DEFAULT_GEMINI_MODEL;
+  if (!key) {
+    return {
+      ok: false,
+      error: { kind: 'no_key', message: 'Add your Gemini API key in Settings first.' },
+    };
+  }
+  if (images.length === 0) {
+    return { ok: false, error: { kind: 'bad_request', message: 'No receipt image to read.' } };
+  }
+
+  const body = buildReceiptRequest(images, categories);
+  const opts = { apiKey: key, model: modelName, fetchImpl, timeoutMs };
+  let response = await postGenerateContent(body, opts);
+  if (!response.ok && RETRYABLE.has(response.error.kind)) {
+    await sleep(retryDelayMs);
+    response = await postGenerateContent(body, opts);
+  }
+  if (!response.ok) return response;
+
+  const answer = answerText(response.value);
+  if (!answer.ok) return answer;
+  const { text, truncated } = answer.value;
+
+  const validated = validateReceipt(text);
+  if (!validated.ok) {
+    return {
+      ok: false,
+      error: {
+        kind: 'invalid_receipt',
+        message: truncated
+          ? 'Gemini’s answer was cut off (receipt too long). Try again, or edit it by hand.'
+          : `${validated.error} You can retry or edit it by hand.`,
+        issues: validated.issues,
+        rawText: text,
+      },
+    };
+  }
+  return { ok: true, value: { receipt: validated.data, rawJson: text } };
 }
