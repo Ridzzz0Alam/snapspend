@@ -128,6 +128,70 @@ export function draftFromExtracted(
   };
 }
 
+/** A saved receipt (Receipt detail → edit). Same shape as `DraftInput`, as stored. */
+export function draftFromStored(
+  r: {
+    kind: ReceiptKind;
+    store: string;
+    date: string;
+    time: string | null;
+    printedTotal: number;
+    cardLast4: string | null;
+    paymentMethod: string | null;
+    rawGeminiJson: string | null;
+    note: string | null;
+    category: string | null;
+    items: readonly {
+      nameEn: string;
+      nameOriginal: string | null;
+      sizeLabel: string | null;
+      quantity: number;
+      unit: ItemUnit;
+      unitPrice: number | null;
+      lineTotal: number;
+      category: string;
+    }[];
+    adjustments: readonly {
+      type: AdjustmentType;
+      label: string;
+      amount: number;
+      appliesTo: string | null;
+    }[];
+  },
+  newKey: () => string,
+): ReceiptDraft {
+  return {
+    kind: r.kind,
+    store: r.store,
+    date: formatLogDate(r.date),
+    time: r.time ?? '',
+    cardLast4: r.cardLast4 ?? '',
+    paymentMethod: r.paymentMethod,
+    printedTotal: text(r.printedTotal),
+    note: r.note ?? '',
+    category: r.category ?? '',
+    items: r.items.map((it) => ({
+      key: newKey(),
+      nameEn: it.nameEn,
+      nameOriginal: it.nameOriginal ?? '',
+      sizeLabel: it.sizeLabel ?? '',
+      quantity: text(it.quantity),
+      unit: it.unit,
+      unitPrice: text(it.unitPrice),
+      lineTotal: text(it.lineTotal),
+      category: it.category,
+    })),
+    adjustments: r.adjustments.map((a) => ({
+      key: newKey(),
+      type: a.type,
+      label: a.label,
+      amount: text(a.amount),
+      appliesTo: a.appliesTo,
+    })),
+    rawGeminiJson: r.rawGeminiJson,
+  };
+}
+
 /** A blank form: manual expense, or a scanned receipt typed in by hand. */
 export function emptyDraft(kind: ReceiptKind, todayIso: string): ReceiptDraft {
   return {

@@ -7,6 +7,8 @@ import {
   createReceiptWithItems,
   deleteReceipt,
   findDuplicates,
+  getReceipt,
+  listRecent,
   listByDateRange,
   listItems,
   listStores,
@@ -245,6 +247,32 @@ describe('deleteReceipt (soft delete, D44)', () => {
     deleteReceipt(db, id);
     expect(updateReceipt(db, id, { ...tesco, store: 'ALDI' })).toBe(false);
     expect(db.select().from(receipts).get()?.store).toBe('TESCO');
+  });
+});
+
+describe('getReceipt / listRecent', () => {
+  it('returns one receipt with items in order and adjustments, or null', () => {
+    const id = createReceiptWithItems(db, tesco);
+    const r = getReceipt(db, id)!;
+    expect(r).toMatchObject({ id, store: 'TESCO', printedTotal: 1366 });
+    expect(r.items.map((i) => i.position)).toEqual([0, 1, 2]);
+    expect(r.adjustments).toHaveLength(tesco.adjustments.length);
+    expect(getReceipt(db, 'nope')).toBeNull();
+    deleteReceipt(db, id);
+    expect(getReceipt(db, id)).toBeNull();
+  });
+
+  it('lists the newest live receipts first (date, then time, then created)', () => {
+    const deps = testDeps();
+    for (const r of seedReceipts) createReceiptWithItems(db, r, deps);
+    const recent = listRecent(db, 3);
+    expect(recent.map((r) => [r.date, r.store])).toEqual([
+      ['2026-11-13', 'Yettel Recharge'],
+      ['2026-11-07', 'TESCO'],
+      ['2026-11-06', 'Kashmiri Bazar'],
+    ]);
+    deleteReceipt(db, recent[0]!.id);
+    expect(listRecent(db, 1)[0]!.store).toBe('TESCO');
   });
 });
 

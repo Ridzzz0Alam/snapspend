@@ -337,3 +337,39 @@ export function listStores(db: AppDatabase): string[] {
     .all()
     .map((r) => r.store);
 }
+
+/** One live receipt with its items (receipt order) and adjustments; null if missing or deleted. */
+export function getReceipt(db: AppDatabase, id: string): StoredReceipt | null {
+  const row = db
+    .select()
+    .from(receipts)
+    .where(and(eq(receipts.id, id), notDeleted))
+    .get();
+  if (!row) return null;
+  return {
+    ...row,
+    items: db
+      .select()
+      .from(items)
+      .where(eq(items.receiptId, id))
+      .orderBy(asc(items.position))
+      .all(),
+    adjustments: db.select().from(adjustments).where(eq(adjustments.receiptId, id)).all(),
+  };
+}
+
+/** The newest live receipts (no items loaded), for Home: date, then time, then createdAt, descending. */
+export function listRecent(db: AppDatabase, limit: number): ReceiptRow[] {
+  return db
+    .select()
+    .from(receipts)
+    .where(notDeleted)
+    .orderBy(
+      desc(receipts.date),
+      sql`${receipts.time} IS NULL`,
+      desc(receipts.time),
+      desc(receipts.createdAt),
+    )
+    .limit(limit)
+    .all();
+}

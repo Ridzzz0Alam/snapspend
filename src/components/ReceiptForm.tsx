@@ -40,11 +40,14 @@ export function ReceiptForm({
   setDraft,
   errors,
   showItems = true,
+  excludeId,
 }: {
   draft: ReceiptDraft;
   setDraft: (update: (d: ReceiptDraft) => ReceiptDraft) => void;
   errors: DraftErrors;
   showItems?: boolean;
+  /** The receipt being edited (Receipt detail), so it isn't reported as its own duplicate. */
+  excludeId?: string;
 }) {
   const c = usePalette();
   const set =
@@ -76,11 +79,15 @@ export function ReceiptForm({
     const total = parseHuf(draft.printedTotal);
     if (!draft.store.trim() || !date || total == null) return [];
     try {
-      return findDuplicates(db, { store: applyStoreAlias(draft.store), date, printedTotal: total });
+      return findDuplicates(
+        db,
+        { store: applyStoreAlias(draft.store), date, printedTotal: total },
+        { excludeId },
+      );
     } catch {
       return [];
     }
-  }, [draft.store, draft.date, draft.printedTotal]);
+  }, [draft.store, draft.date, draft.printedTotal, excludeId]);
 
   return (
     <View style={[styles.form, { backgroundColor: 'transparent' }]}>

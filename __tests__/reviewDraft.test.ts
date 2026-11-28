@@ -4,6 +4,7 @@ import {
   blankAdjustment,
   blankItem,
   draftFromExtracted,
+  draftFromStored,
   draftTotals,
   emptyDraft,
   parseQuantity,
@@ -223,5 +224,75 @@ describe('emptyDraft / blank rows', () => {
       category: 'Other',
     });
     expect(blankAdjustment(key)).toMatchObject({ key: 'k2', type: 'discount', amount: '' });
+  });
+});
+
+describe('draftFromStored (Receipt detail edit)', () => {
+  it('round-trips a saved receipt through the form unchanged', () => {
+    const stored = {
+      kind: 'scanned' as const,
+      store: 'TESCO',
+      date: '2026-11-07',
+      time: '18:05',
+      printedTotal: 1366,
+      cardLast4: '4821',
+      paymentMethod: 'card',
+      rawGeminiJson: '{}',
+      note: 'n',
+      category: null,
+      items: [
+        {
+          nameEn: 'Dates',
+          nameOriginal: 'DATOLYA',
+          sizeLabel: '200g',
+          quantity: 1,
+          unit: 'pcs' as const,
+          unitPrice: null,
+          lineTotal: 449,
+          category: 'Snacks & Sweets',
+        },
+      ],
+      adjustments: [{ type: 'discount' as const, label: 'Clubcard', amount: 100, appliesTo: null }],
+    };
+    const d = draftFromStored(stored, key);
+    expect(d).toMatchObject({ date: '07/11/2026', time: '18:05', printedTotal: '1366', note: 'n' });
+    const r = validateDraft(d);
+    if (!r.ok) throw new Error(JSON.stringify(r.errors));
+    const { items, adjustments, ...rest } = r.input;
+    expect(rest).toEqual({
+      kind: 'scanned',
+      store: 'TESCO',
+      date: '2026-11-07',
+      time: '18:05',
+      printedTotal: 1366,
+      cardLast4: '4821',
+      paymentMethod: 'card',
+      rawGeminiJson: '{}',
+      note: 'n',
+      category: null,
+    });
+    expect(items).toEqual(stored.items);
+    expect(adjustments).toEqual(stored.adjustments);
+  });
+
+  it('keeps the receipt category of a manual entry', () => {
+    const d = draftFromStored(
+      {
+        kind: 'manual',
+        store: 'Yettel Recharge',
+        date: '2026-11-13',
+        time: null,
+        printedTotal: 3000,
+        cardLast4: null,
+        paymentMethod: null,
+        rawGeminiJson: null,
+        note: null,
+        category: 'Phone & Top-ups',
+        items: [],
+        adjustments: [],
+      },
+      key,
+    );
+    expect(d).toMatchObject({ kind: 'manual', category: 'Phone & Top-ups', time: '', note: '' });
   });
 });
