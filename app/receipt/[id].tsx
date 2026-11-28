@@ -20,6 +20,8 @@ import { ReceiptForm } from '@/components/ReceiptForm';
 import { Text, View } from '@/components/Themed';
 import { Button, usePalette } from '@/components/ui';
 import { ImageViewer } from '@/components/ZoomableImage';
+import { File } from 'expo-file-system';
+
 import { db } from '@/db/client';
 import { deleteReceipt, getReceipt, updateReceipt, type StoredReceipt } from '@/db/repository';
 import { formatLogDate } from '@/lib/format';
@@ -32,11 +34,21 @@ import {
 } from '@/lib/reviewDraft';
 import { receiptTotal } from '@/lib/totals';
 
+function fileExists(uri: string): boolean {
+  try {
+    return new File(uri).exists;
+  } catch {
+    return false;
+  }
+}
+
 function parseImagePaths(json: string | null): string[] {
   if (!json) return [];
   try {
     const v: unknown = JSON.parse(json);
-    return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : [];
+    if (!Array.isArray(v)) return [];
+    // A receipt restored from a backup on another phone has paths to photos that aren't here (D72).
+    return v.filter((x): x is string => typeof x === 'string' && fileExists(x));
   } catch {
     return [];
   }

@@ -156,3 +156,18 @@ Decisions already made. Don't re-litigate; add new entries at the bottom with a 
   - The zoom viewer uses gesture-handler + reanimated: pinch 1–6×, drag when zoomed, double-tap to zoom or reset, and page arrows for multi-page receipts. The app root is wrapped in `GestureHandlerRootView`.
 - **D70. Template leftovers removed:** the info modal, `EditScreenInfo` and `StyledText`. Home replaces "Tab One". Tabs: Home, Scan, Daily Log, Items, Insights, Settings (D63).
 
+
+## 2026-11-28 — Phase 8
+
+- **D71. Excel export instead of CSV** (owner's choice: .xlsx opens directly on phones).
+  - `src/lib/xlsx.ts` is a small writer of our own: Office Open XML, zipped with `fflate` (pure JS, MIT). No SheetJS / exceljs, which are large and mostly unused here.
+  - Features: several sheets, a bold frozen header with filter buttons, column widths, real date cells (`dd/mm/yyyy`), money as `#,##0`, quantities as `0.###`. Text uses inline strings, and characters XML forbids are stripped.
+  - Two sheets, oldest first. **Items**: date, time, store, item, original name, size, qty, unit, unit price (printed, else total ÷ qty), total, category, card. **Receipts**: date, time, store, type, total, printed total, item count, discounts, charges, points, card, category, note.
+  - Checked by opening generated files, including one exported on the phone, with LibreOffice.
+  - Files are written to the cache directory and shared with `expo-sharing`, because React Native's `Share` can only send text on Android.
+- **D72. JSON backup format and merge.**
+  - Format: `{ format: "snapspend-backup", version: 1, exportedAt, receipts[], storeAliases[] }`. Each receipt is its full row, including `deletedAt`, plus its items and adjustments with their ids.
+  - Soft-deleted receipts are included so deletes travel with the backup. **Photos are not included**; the Receipt detail screen only shows photos that exist on this phone.
+  - Import is checked with zod (whole-forint money, known enums). It rejects non-backups and files from a newer version.
+  - Merge happens in one transaction (D44): a missing receipt is added; an existing one is replaced only if the backup's `updatedAt` is newer, children included; otherwise it's left alone. Store aliases are added when missing; local ones win.
+  - Import uses `File.pickFileAsync` from `expo-file-system`, so no extra native module is needed.

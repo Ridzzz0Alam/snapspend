@@ -8,6 +8,7 @@ import {
   TextInput,
 } from 'react-native';
 
+import { BackupSection } from '@/components/BackupSection';
 import { DevDataPanel } from '@/components/DevDataPanel';
 import { ExternalLink } from '@/components/ExternalLink';
 import { Text, View } from '@/components/Themed';
@@ -172,6 +173,8 @@ function SettingsForm({ s }: { s: ReturnType<typeof useGeminiSettings> }) {
           />
         </View>
         {test.status === 'done' && <TestResult result={test.result} palette={c} />}
+
+        <BackupSection />
 
         {__DEV__ && <DevDataPanel />}
       </ScrollView>
