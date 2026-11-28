@@ -10,7 +10,7 @@ export const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta
 export const DEFAULT_GEMINI_MODEL = 'gemini-3.8-flash';
 
 /** Timeout for the Settings "Test key" request; receipt extraction uses SPEC §5's 60s. */
-export const TEST_KEY_TIMEOUT_MS = 15_000;
+export const TEST_KEY_TIMEOUT_MS = 30_000;
 
 export type GeminiErrorKind =
   | 'no_key'
