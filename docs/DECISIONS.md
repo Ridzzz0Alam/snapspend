@@ -32,7 +32,7 @@ Decisions already made. Don't re-litigate; add new entries at the bottom with a 
 - **D21. IDs** are UUID v4 strings (generator chosen in Phase 2).
 
 ### Open (decide when the phase arrives)
-- **O1. Items tracker tab.** CLAUDE.md lists tabs index, scan, log, insights, settings, but SPEC §2.5 adds an Items tracker. Decide in Phase 6 (proposal: add an `items` tab, 6 tabs total).
+- **O1. Items tracker tab.** CLAUDE.md lists tabs index, scan, log, insights, settings, but SPEC §2.5 adds an Items tracker. Decide in Phase 6 (proposal: add an `items` tab, 6 tabs total). Resolved: D63.
 - **O2. Default Gemini model id.** Check the Gemini API docs for the current stable Flash model in Phase 3. Resolved: D48.
 - **O3. Other AI providers (owner's idea, 2026-11-28, not scheduled).** Keep the option to read receipts with providers other than Gemini: **OpenRouter** or **OpenCode** as a single gateway, giving access to DeepSeek, GLM (Zhipu), Kimi (Moonshot) and others. Gemini stays the only provider for now. When this is picked up:
   - The receipt prompt and response format already live in their own file (`src/lib/receiptPrompt.ts`), and every answer goes through the same zod check (`validateReceipt`). A new provider only needs its own request/response code.
@@ -122,3 +122,20 @@ Decisions already made. Don't re-litigate; add new entries at the bottom with a 
   - Custom uses the Android system calendar (`DateTimePickerAndroid`, no future dates). A range picked backwards is swapped.
   - The GRAND TOTAL switch resets to the SPEC default whenever the range changes: on for more than one day, off for a single day. The user can still toggle it.
   - The log refreshes by itself when receipts change, using a live query on the receipt count and latest `updatedAt`. It's the Daily Log tab (`app/(tabs)/log.tsx`). The dev panel on Tab Two still exists until Phase 7 replaces the template tabs.
+
+## 2026-11-28 — Phase 6
+
+- **D63. Tabs** (resolves O1, owner agreed). Six tabs in the end: Home (`index`), Scan, Daily Log, Items, Insights, Settings. In Phase 6 the template "Tab Two" became **Items** (`app/(tabs)/items.tsx`); Home and Insights come in Phase 7. The dev sample-data panel moved to the bottom of Settings, still `__DEV__` only, and its Daily Log preview was dropped because the Daily Log tab replaces it.
+- **D64. Items list behaviour.**
+  - SQL does the date, store and category filters and the sort. Text search runs in JS on top, so it can ignore accents (D40) and doesn't re-run the query on every keystroke.
+  - Date presets are All time / This week / This month / Last month / Custom (calendar), using the same range rules as the Daily Log (D62).
+  - Store choices come from `listStores` (live receipts, A–Z); categories are the default list.
+  - The footer sums the line totals of the rows shown. Receipt-level discounts, charges and points aren't items, so they're not included.
+  - Tapping the active sort button flips its direction. Defaults: date and amount newest/largest first; name, store and category A–Z (D41).
+- **D65. Price history rules.**
+  - A product is all items sharing a `normalizedKey`.
+  - Unit price is the printed `unitPrice`, else line total ÷ quantity (rounded).
+  - Returned items (negative lines) are skipped. If a product was bought both per piece and per kg, only the unit of the latest purchase is charted.
+  - "Cheapest" is the lowest unit price; the most recent purchase wins a tie.
+  - The chart's y-axis starts near 80% of the lowest price so changes are visible.
+- **D66. `useReceiptsVersion`** is a shared live-query signal (receipt count + latest `updatedAt`). Daily Log, Items and Price history use it to refresh themselves after any save, edit or delete.

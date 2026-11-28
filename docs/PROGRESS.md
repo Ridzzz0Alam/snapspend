@@ -83,9 +83,16 @@ _(empty — write blockers here)_
      - The log is in Google Sans Code and can be selected.
 
 ## Phase 6 — Items tracker + price history
-- [ ] FlashList of items, sort + filter + search, filtered-total footer
-- [ ] Price history screen: line chart of unit price over time, cheapest store, last paid
+- [x] FlashList of items, sort + filter + search, filtered-total footer
+- [x] Price history screen: line chart of unit price over time, cheapest store, last paid
 - How to verify:
+  1. `npx tsc --noEmit` and `npx jest` pass (276 tests). `__tests__/priceHistory.test.ts` covers unit price (printed, or total ÷ qty), oldest-first points, last paid, cheapest (newest wins a tie), average, mixed pcs/kg, skipping returns, and the footer sum. `__tests__/repository.test.ts` covers the `normalizedKey` filter and `listStores`, both skipping deleted receipts.
+  2. Native rebuild needed once for `@shopify/flash-list`, `react-native-svg`, `expo-linear-gradient` (used by the chart) and `react-native-gifted-charts`.
+  3. On the phone (OnePlus 7, 2026-11-28):
+     - The **Items** tab lists all 9 real items, newest first, with kg lines as `1.312 kg × 489.00 Ft/kg`, and the footer `9 items · 3,789.00 Ft`.
+     - **Search**, **sort** (tap again to flip ↑/↓) and **Filters** (date range, stores, categories, Clear all) all work and update the footer total.
+     - Tapping "Beans in sauce 420g" opens **Price history**: Last paid / Cheapest cards, average, times bought, total spent, the chart and the purchase list.
+     - The sample-data buttons are now at the bottom of Settings (dev builds only).
 
 ## Phase 7 — Home + Insights
 - [ ] Home: month total, today, recent receipts, scan + add buttons
