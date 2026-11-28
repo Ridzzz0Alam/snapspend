@@ -22,6 +22,8 @@ export const receipts = sqliteTable(
     imagePaths: text('image_paths'),
     rawGeminiJson: text('raw_gemini_json'),
     note: text('note'),
+    /** Optional receipt-level category for manual / total-only entries (D55); items carry their own. */
+    category: text('category'),
     /** Epoch ms. */
     createdAt: integer('created_at').notNull(),
     updatedAt: integer('updated_at').notNull(),

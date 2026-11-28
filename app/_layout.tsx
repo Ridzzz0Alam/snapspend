@@ -69,6 +69,8 @@ function RootLayoutNav() {
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="review/[jobId]" options={{ title: 'Review receipt' }} />
+        <Stack.Screen name="expense/new" options={{ title: 'Add expense' }} />
       </Stack>
     </ThemeProvider>
   );

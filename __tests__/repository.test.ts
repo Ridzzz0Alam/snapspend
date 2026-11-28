@@ -6,6 +6,7 @@ import { count } from 'drizzle-orm';
 import {
   createReceiptWithItems,
   deleteReceipt,
+  findDuplicates,
   listByDateRange,
   listItems,
   updateReceipt,
@@ -67,6 +68,28 @@ describe('createReceiptWithItems', () => {
       ['discount', 100],
       ['discount', 400],
     ]);
+  });
+
+  it('stores an optional receipt-level category (D55)', () => {
+    createReceiptWithItems(db, {
+      kind: 'manual',
+      store: 'Yettel Recharge',
+      date: '2026-11-28',
+      printedTotal: 5000,
+      category: 'Phone & Top-ups',
+      items: [],
+      adjustments: [],
+    });
+    createReceiptWithItems(db, tesco);
+    expect(listByDateRange(db, '2026-11-01', '2026-11-30').map((r) => r.category)).toEqual([
+      null,
+      'Phone & Top-ups',
+    ]);
+  });
+
+  it('uses a given receipt id', () => {
+    expect(createReceiptWithItems(db, tesco, { receiptId: 'chosen-id' })).toBe('chosen-id');
+    expect(listByDateRange(db, tesco.date, tesco.date)[0]!.id).toBe('chosen-id');
   });
 
   it('defaults a missing category to Other and keeps kg quantities exact', () => {
@@ -221,6 +244,25 @@ describe('deleteReceipt (soft delete, D44)', () => {
     deleteReceipt(db, id);
     expect(updateReceipt(db, id, { ...tesco, store: 'ALDI' })).toBe(false);
     expect(db.select().from(receipts).get()?.store).toBe('TESCO');
+  });
+});
+
+describe('findDuplicates (D19)', () => {
+  it('matches same store (ignoring case and spacing), date and printed total', () => {
+    const id = createReceiptWithItems(db, tesco);
+    const probe = { store: ' tesco ', date: tesco.date, printedTotal: tesco.printedTotal };
+    expect(findDuplicates(db, probe).map((r) => r.id)).toEqual([id]);
+    expect(findDuplicates(db, { ...probe, printedTotal: tesco.printedTotal + 1 })).toEqual([]);
+    expect(findDuplicates(db, { ...probe, date: '2026-01-01' })).toEqual([]);
+    expect(findDuplicates(db, { ...probe, store: 'ALDI' })).toEqual([]);
+  });
+
+  it('ignores deleted receipts and the receipt being edited', () => {
+    const id = createReceiptWithItems(db, tesco);
+    const probe = { store: tesco.store, date: tesco.date, printedTotal: tesco.printedTotal };
+    expect(findDuplicates(db, probe, { excludeId: id })).toEqual([]);
+    deleteReceipt(db, id);
+    expect(findDuplicates(db, probe)).toEqual([]);
   });
 });
 

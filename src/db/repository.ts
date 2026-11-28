@@ -45,6 +45,8 @@ export interface ReceiptInput {
   imagePaths?: string[] | null;
   rawGeminiJson?: string | null;
   note?: string | null;
+  /** Receipt-level category (manual / total-only entries, D55). */
+  category?: string | null;
   items: ItemInput[];
   adjustments: Adjustment[];
 }
@@ -58,6 +60,8 @@ export interface StoredReceipt extends ReceiptRow {
 export interface RepoDeps {
   newId?: () => string;
   now?: () => number;
+  /** Use this id for the new receipt (e.g. its images were already saved under it). */
+  receiptId?: string;
 }
 
 /** Rows that haven't been soft-deleted. Every read and total must include this. */
@@ -110,6 +114,7 @@ function receiptFields(input: ReceiptInput) {
     imagePaths: input.imagePaths ? JSON.stringify(input.imagePaths) : null,
     rawGeminiJson: input.rawGeminiJson ?? null,
     note: input.note ?? null,
+    category: input.category ?? null,
   };
 }
 
@@ -129,9 +134,9 @@ function insertChildren(
 export function createReceiptWithItems(
   db: AppDatabase,
   input: ReceiptInput,
-  { newId = defaultNewId, now = Date.now }: RepoDeps = {},
+  { newId = defaultNewId, now = Date.now, receiptId }: RepoDeps = {},
 ): string {
-  const id = newId();
+  const id = receiptId ?? newId();
   const ts = now();
   db.transaction((tx) => {
     tx.insert(receipts)
@@ -226,6 +231,31 @@ export function listByDateRange(db: AppDatabase, from: string, to: string): Stor
   for (const it of itemList) byId.get(it.receiptId)?.items.push(it);
   for (const a of adjList) byId.get(a.receiptId)?.adjustments.push(a);
   return [...byId.values()];
+}
+
+/**
+ * Live receipts with the same store (case/space-insensitive), date and printed total (D19).
+ * The Review screen warns about these; it never blocks the save.
+ */
+export function findDuplicates(
+  db: AppDatabase,
+  probe: { store: string; date: string; printedTotal: number },
+  { excludeId }: { excludeId?: string } = {},
+): ReceiptRow[] {
+  const store = probe.store.trim().replace(/\s+/g, ' ').toLowerCase();
+  return db
+    .select()
+    .from(receipts)
+    .where(
+      and(
+        notDeleted,
+        eq(receipts.date, probe.date),
+        eq(receipts.printedTotal, probe.printedTotal),
+        sql`lower(trim(${receipts.store})) = ${store}`,
+        excludeId ? sql`${receipts.id} <> ${excludeId}` : undefined,
+      ),
+    )
+    .all();
 }
 
 export type ItemSortKey = 'date' | 'amount' | 'name' | 'store' | 'category';
