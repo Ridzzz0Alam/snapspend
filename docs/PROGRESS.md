@@ -44,9 +44,13 @@ _(empty — write blockers here)_
 ## Phase 3 — Settings + Gemini client
 - [x] (Sync prep, DECISIONS D44) Soft delete: `receipts.deletedAt` + migration; `deleteReceipt` sets it; every list/total query skips deleted rows; tests updated
 - [x] Settings screen: API key in expo-secure-store (masked), model name, "Test key" button (tiny text-only request)
-- [ ] `src/lib/gemini.ts`: build request, fetch with timeout + one retry, parse → zod → typed result; errors as typed results not throws
-- [ ] Unit tests with mocked fetch: success, malformed JSON, 400, 429, timeout
+- [x] `src/lib/gemini.ts`: build request, fetch with timeout + one retry, parse → zod → typed result; errors as typed results not throws
+- [x] Unit tests with mocked fetch: success, malformed JSON, 400, 429, timeout
 - How to verify:
+  1. `npx tsc --noEmit` and `npx jest` pass (208 tests). Main files: `__tests__/gemini.test.ts` (Test key, error mapping), `__tests__/geminiReceipt.test.ts` (request shape, retry on 429/5xx, no retry on 400/network/timeout, malformed JSON, schema failures, blocked/empty/truncated answers, key never in errors), `__tests__/receiptPrompt.test.ts` (prompt and responseSchema match SPEC §5 exactly) and `__tests__/repository.test.ts` (soft delete).
+  2. On the phone (OnePlus 7, 2026-11-28): the native rebuild for `expo-secure-store` installs and launches. The **Settings** tab shows the key field, model `gemini-3.8-flash` and **Test key**. A fake key gives "The Gemini API key was rejected" plus Google's HTTP 400 reason; the real key gives "✓ Key works with gemini-3.8-flash". Save / Replace / Remove work, and a `.env` key (dev builds only, D52) is shown with its own note.
+  3. Real receipt check, done from the PC with the `.env` key: a drawn SPAR receipt sent through `extractReceipt` came back fully correct (4 items including 0.792 kg bananas, card 4821, Repont 100 as `points`). The scan screen in Phase 4 is the on-phone end-to-end test.
+  4. Soft delete: the phone's database shows migration `0001_soft_delete` applied (`receipts.deleted_at` exists).
 
 ## Phase 4 — Scan → Review → Save
 - [ ] Scanner via react-native-document-scanner-plugin (multi-page) + gallery fallback via expo-image-picker (multi-select = batch queue)
@@ -93,3 +97,6 @@ _(empty — write blockers here)_
 - [ ] Sync status in Settings (last synced, errors, "Sync now")
 - [ ] Test with both phones: add, edit and delete on each and confirm both match, including after being offline
 - How to verify:
+
+## Backlog (not scheduled)
+- [ ] Other AI providers for receipt reading (OpenRouter / OpenCode → DeepSeek, GLM, Kimi…), selectable in Settings; Gemini stays the default (DECISIONS O3)
