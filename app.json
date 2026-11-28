@@ -37,7 +37,8 @@
       ],
       "./plugins/withArm64Only",
       "./plugins/withCmakeDir",
-      "expo-sqlite"
+      "expo-sqlite",
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true
