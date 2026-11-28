@@ -187,3 +187,18 @@ Decisions already made. Don't re-litigate; add new entries at the bottom with a 
   - Soft-deleted receipts follow the same age rule, so their photos are eventually removed.
   - `updatedAt` is **not** changed, because photos are this phone's own data: removing them isn't an edit that should win a backup merge or a sync.
   - Settings shows how much space receipt photos use on the phone.
+- **D75. Theme and error states.**
+  - The theme **follows the system** (SPEC §7): `userInterfaceStyle: automatic`, and there's no in-app switch.
+  - The navigation theme's background is set to the themed View background (`#fff` / `#000`). Before, light mode showed white bands on the navigation theme's grey. Checked every tab and the pushed screens in both themes on the phone.
+  - Any screen that throws while rendering, such as a failed database read, shows a themed **"Something went wrong"** page with the message, **Try again** and **Go to Home**. This is the Expo Router `ErrorBoundary` exported from `app/_layout.tsx`. The "Database update failed" screen and the not-found page use the same `ErrorScreen`.
+  - Empty and loading states already existed on every screen (Home, Daily Log, Items, Insights, price history, receipt detail, Review, Settings), so they were left as they were.
+- **D76. Settings is a grouped list** (owner's request: the long single page looked complicated).
+  - The Settings tab shows rounded groups of rows, like Android's own Settings. Each row has an icon, a title and a one-line summary, and opens its own page:
+    - **Receipt reading:** Gemini API key & model → `settings/gemini` (key, model, Test key).
+    - **Lists:** Categories, Store names (D73).
+    - **Data:** Receipt photos → `settings/photos` (choice list, storage used; D74), and Backup & export → `settings/backup` (D71, D72).
+    - **Developer:** dev builds only → `settings/developer` (sample data).
+  - The summaries refresh each time Settings comes back into view. The API key summary shows only the last four characters, and turns amber when no key is set.
+  - The app version comes from the app config and is shown at the bottom.
+  - The shared pieces are `SettingsGroup` and `SettingsRow` (`src/components/SettingsList.tsx`). Icons are Material symbols via `expo-symbols`, which the tabs already use, so no new dependency was needed.
+  - No in-app theme switch: the owner confirmed following the system theme (D75).

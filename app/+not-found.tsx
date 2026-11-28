@@ -1,40 +1,18 @@
-import { Link, Stack } from 'expo-router';
-import { StyleSheet } from 'react-native';
+/** Unknown route (e.g. a stale deep link): themed message with a way back to Home. */
+import { router, Stack } from 'expo-router';
 
-import { Text, View } from '@/components/Themed';
+import { ErrorScreen } from '@/components/ErrorScreen';
+import { Button } from '@/components/ui';
 
 export default function NotFoundScreen() {
   return (
     <>
-      <Stack.Screen options={{ title: 'Oops!' }} />
-      <View style={styles.container}>
-        <Text style={styles.title}>This screen does not exist.</Text>
-
-        <Link href="/" style={styles.link}>
-          <Text style={styles.linkText}>Go to home screen!</Text>
-        </Link>
-      </View>
+      <Stack.Screen options={{ title: 'Not found' }} />
+      <ErrorScreen
+        title="This page doesn't exist"
+        message="The link may be out of date. Your receipts are not affected."
+        actions={<Button label="Go to Home" onPress={() => router.replace('/')} />}
+      />
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  link: {
-    marginTop: 15,
-    paddingVertical: 15,
-  },
-  linkText: {
-    fontSize: 14,
-    color: '#2e78b7',
-  },
-});

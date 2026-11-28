@@ -1,7 +1,9 @@
-/** Settings → Receipt photos: "Delete receipt images older than" Never / 6 months / 1 year (D46, D74). */
+/** Settings → Receipt photos: delete photos older than Never / 6 months / 1 year (D46, D74). */
 import { useMemo, useState } from 'react';
-import { Alert, StyleSheet } from 'react-native';
+import { Alert, ScrollView, StyleSheet } from 'react-native';
 
+import { Banner } from '@/components/form';
+import { SettingsGroup, SettingsRow } from '@/components/SettingsList';
 import { useReceiptsVersion } from '@/hooks/useReceiptsVersion';
 import { formatLogDate } from '@/lib/format';
 import {
@@ -19,14 +21,15 @@ import {
   setRetention,
 } from '@/media/photoRetention';
 
-import { Banner, Segmented } from './form';
-import { Text, View } from './Themed';
-import { usePalette } from './ui';
-
 const receiptsText = (n: number) => `${n} receipt${n === 1 ? '' : 's'}`;
 
-export function PhotoRetentionSection() {
-  const c = usePalette();
+const SUBTITLES: Record<Retention, string> = {
+  never: 'Keep every photo',
+  '6m': 'Delete photos of receipts older than 6 months',
+  '1y': 'Delete photos of receipts older than 1 year',
+};
+
+export default function PhotoSettingsScreen() {
   const version = useReceiptsVersion();
   const [option, setOption] = useState<Retention>(getRetention);
   const [message, setMessage] = useState<string | null>(null);
@@ -46,7 +49,7 @@ export function PhotoRetentionSection() {
     setMessage(n ? `Deleted the photos of ${receiptsText(n)}.` : null);
   }
 
-  function onChange(to: Retention) {
+  function choose(to: Retention) {
     if (to === option) return;
     setMessage(null);
     if (!isStricter(option, to)) return commit(to);
@@ -65,26 +68,36 @@ export function PhotoRetentionSection() {
   }
 
   return (
-    <View style={[styles.section, { borderColor: c.border }]}>
-      <Text style={styles.title}>Receipt photos</Text>
-      <Text style={[styles.hint, { color: c.muted }]}>Delete photos older than</Text>
-      <Segmented
-        options={RETENTION_OPTIONS}
-        value={option}
-        onChange={onChange}
-        labels={RETENTION_LABELS}
-      />
-      <Text style={[styles.hint, { color: c.muted }]}>
-        Photos use {formatBytes(bytes)} on this phone. Only the photos are deleted; receipts and
-        items are always kept. Photos are not in the backup.
-      </Text>
+    <ScrollView contentContainerStyle={styles.container}>
+      <SettingsGroup title="Storage">
+        <SettingsRow
+          icon="photo_library"
+          title={formatBytes(bytes)}
+          subtitle="Used by receipt photos on this phone"
+        />
+      </SettingsGroup>
+
+      <SettingsGroup
+        plain
+        title="Delete old photos"
+        footer="Age is by the receipt's date. Only photos are deleted; receipts, items and totals are always kept. Photos are not in the backup."
+      >
+        {RETENTION_OPTIONS.map((o) => (
+          <SettingsRow
+            key={o}
+            title={RETENTION_LABELS[o]}
+            subtitle={SUBTITLES[o]}
+            selected={o === option}
+            onPress={() => choose(o)}
+          />
+        ))}
+      </SettingsGroup>
+
       {message && <Banner tone="ok">{message}</Banner>}
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  section: { marginTop: 24, paddingTop: 16, borderTopWidth: StyleSheet.hairlineWidth, gap: 10 },
-  title: { fontSize: 17, fontWeight: '600' },
-  hint: { fontSize: 12, lineHeight: 17 },
+  container: { padding: 16, gap: 24 },
 });
