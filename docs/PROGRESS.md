@@ -95,10 +95,17 @@ _(empty — write blockers here)_
      - The sample-data buttons are now at the bottom of Settings (dev builds only).
 
 ## Phase 7 — Home + Insights
-- [ ] Home: month total, today, recent receipts, scan + add buttons
-- [ ] Insights: 12-month bars, by store, by category, top items, per-card totals
-- [ ] Receipt detail screen with zoomable image, edit, delete
+- [x] Home: month total, today, recent receipts, scan + add buttons
+- [x] Insights: 12-month bars, by store, by category, top items, per-card totals
+- [x] Receipt detail screen with zoomable image, edit, delete
 - How to verify:
+  1. `npx tsc --noEmit` and `npx jest` pass (289 tests). `__tests__/insights.test.ts` covers the 12-month list across a year boundary, monthly totals, by store / category / card, the net "Discounts & charges" row (categories add up to the total), and top items with average price. `__tests__/repository.test.ts` covers `getReceipt` (null when deleted) and `listRecent`. `__tests__/reviewDraft.test.ts` checks that a saved receipt goes through the edit form and back unchanged.
+  2. One native rebuild was needed: `react-native-gesture-handler` became a direct dependency at Expo's pinned 3.3.0.
+  3. On the phone (OnePlus 7, 2026-11-28):
+     - **Home** shows the month total (3,839.00 Ft, 2 receipts), today's total, Scan / Add expense and the last 5 receipts.
+     - **Insights** shows the 12-month bars (tap a bar or ‹ ›), and by store, category and card for the month; Fruit & Veg 1,481 = 839 + 642.
+     - **Receipt detail** (tap a receipt on Home) shows the photo; the full-screen viewer has pinch zoom, drag and double-tap reset.
+     - Editing and saving shows up everywhere. Delete removes the receipt from every screen.
 
 ## Phase 8 — Backup, polish, release APK
 - [ ] CSV export (items), JSON backup export/import (round-trip test); import **merges** by id + `updatedAt` (D44)

@@ -139,3 +139,20 @@ Decisions already made. Don't re-litigate; add new entries at the bottom with a 
   - "Cheapest" is the lowest unit price; the most recent purchase wins a tie.
   - The chart's y-axis starts near 80% of the lowest price so changes are visible.
 - **D66. `useReceiptsVersion`** is a shared live-query signal (receipt count + latest `updatedAt`). Daily Log, Items and Price history use it to refresh themselves after any save, edit or delete.
+
+## 2026-11-28 — Phase 7
+
+- **D67. Category breakdown adds up to the total.** Item line totals count under their category. Receipts without items count under their receipt `category` (D55), or Other. Receipt-level discounts and charges go in one net **"Discounts & charges"** row, so every month's categories sum to the month total (points still don't count, D14).
+- **D68. What the Insights screen covers.**
+  - The 12-month bar chart ends with the current month.
+  - Store, category and card totals are for the **selected month**; the default is the current month.
+  - **Top 10 items** are for the **last 12 months**, ranked by number of purchases (receipt lines), with ties broken by money spent. Each opens its price history.
+  - Breakdowns are horizontal proportion bars instead of pie charts, which are easier to read on a phone. Cards are shown as `•••• 1234`; receipts without a card are grouped as "No card".
+- **D69. Receipt detail.**
+  - It opens from Home's recent receipts.
+  - Editing uses the shared `ReceiptForm`, and Save calls `updateReceipt`. The saved `imagePaths` are passed through unchanged, because the form doesn't edit photos.
+  - The duplicate warning leaves out the receipt being edited (`excludeId`).
+  - Delete is a soft delete (D44). Its photos stay on the phone until the retention setting (D46) removes them.
+  - The zoom viewer uses gesture-handler + reanimated: pinch 1–6×, drag when zoomed, double-tap to zoom or reset, and page arrows for multi-page receipts. The app root is wrapped in `GestureHandlerRootView`.
+- **D70. Template leftovers removed:** the info modal, `EditScreenInfo` and `StyledText`. Home replaces "Tab One". Tabs: Home, Scan, Daily Log, Items, Insights, Settings (D63).
+
