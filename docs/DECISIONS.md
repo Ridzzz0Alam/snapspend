@@ -108,3 +108,8 @@ Decisions already made. Don't re-litigate; add new entries at the bottom with a 
   - On Save, the compressed copies go to `<document>/receipts/<receiptId>/page-N.jpg` before the database insert. They're removed again if the insert fails.
   - Camera and microphone permissions are removed from the app; the ML Kit scanner runs inside Google Play services.
 - **D60. Shared UI pieces** live in `src/components/ui.tsx` (palette, button) and `src/components/form.tsx` (field, banner, segmented control, picker). `ReceiptForm` is shared by Review and Add expense.
+- **D61. Stricter prompt rules** (owner's request, 2026-11-28; SPEC §5 prompt updated, `receiptPrompt.ts` mirrors it).
+  - **Deposits are never items.** "visszaváltási díj" / "visszav. díj" / "betétdíj" / DRS lines (ALU, PET, üveg) are `charge` adjustments labelled "Deposit", linked to their product. Returned-bottle vouchers ("visszaváltási jegy", "göngyöleg") are `discount` "Deposit refund".
+  - **Repont / "pont beváltás" is always `points`.** The first version of the refund rule listed bare "visszaváltás", and Gemini then read "REPONT BEVÁLTÁS" as a deposit refund. The wording was narrowed to stop that.
+  - **Amounts are copied exactly as printed.** In a test receipt whose lines didn't add up, Gemini had silently changed an item from 839 to 789 to match the total. Now it keeps 839 and explains the mismatch in `notes`; the Review screen shows the notes and an amber sanity banner.
+  - Checked against the real API on 2026-11-28 with `gemini-3.8-flash` and `gemini-3.6-flash`: two test receipts (SPAR with Repont; TESCO with two deposits, a voucher and a deliberate total mismatch) came back correct on both models.

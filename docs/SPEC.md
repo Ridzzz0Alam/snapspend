@@ -133,7 +133,9 @@ Extract every purchased line item. Rules:
 - quantity + unit: "2 db x 159" → quantity 2, unit "pcs", unitPrice 159. Weighed goods "0,792 kg x 1059 Ft/kg" → quantity 0.792, unit "kg", unitPrice 1059.
 - All money values are integers in forints. Hungarian receipts use "." or space as thousands separator and "," as decimal separator.
 - lineTotal is the amount charged for that line before receipt-level discounts.
+- Copy every amount exactly as printed. Never change an amount so that the items add up to the total; if they don't add up, return them as printed and say so in notes. The app checks the sum itself.
 - Put loyalty discounts (Tesco Clubcard, "kedvezmény"), coupons and loyalty-point payments (SPAR Repont) in adjustments, not in items. Service charges and bottle deposits are adjustments of type "charge".
+- Deposits are never items. A deposit line ("visszaváltási díj", "visszav. díj", "betétdíj", "DRS", often with "ALU", "PET" or "üveg") is an adjustment of type "charge" with label "Deposit", amount = the deposit charged on that line, appliesTo = the product it belongs to if printed. A returned-bottle voucher ("visszaváltási jegy", "göngyöleg", "palack visszaváltás") is an adjustment of type "discount" with label "Deposit refund". Loyalty points redeemed ("Repont beváltás", "pont beváltás", "Repont") are always type "points", never a deposit refund.
 - bags (bio bag, paper bag, "zacskó") are items in category "Household & Cleaning".
 - category: one of the provided list.
 - printedTotal: the final amount the customer paid ("ÖSSZESEN", "Fizetendő", card amount).
