@@ -69,10 +69,18 @@ _(empty — write blockers here)_
   4. The S23 Ultra end-to-end scan (originally planned here) is still to do; it's covered by the Phase 8 two-phone smoke test.
 
 ## Phase 5 — Daily Log screen
-- [ ] Range presets + custom picker
-- [ ] Monospace selectable output from `formatDailyLog`
-- [ ] Copy (expo-clipboard) and Share buttons, GRAND TOTAL toggle
+- [x] Range presets + custom picker
+- [x] Monospace selectable output from `formatDailyLog`
+- [x] Copy (expo-clipboard) and Share buttons, GRAND TOTAL toggle
 - How to verify:
+  1. `npx tsc --noEmit` and `npx jest` pass (268 tests). `__tests__/ranges.test.ts` covers the presets (week from Monday, across month, year and leap-year boundaries), backwards custom ranges, the GRAND TOTAL default and range labels. The log text itself is covered by the SPEC §6 golden tests.
+  2. Native rebuild needed once for `expo-clipboard` and `@react-native-community/datetimepicker`.
+  3. On the phone (OnePlus 7, 2026-11-28), **Daily Log** tab:
+     - **This week** shows both saved receipts, with `GRAND TOTAL - 3,839 Ft` switched on by default.
+     - **Today** (no receipts) shows "No receipts in this range" and switches GRAND TOTAL off.
+     - **Copy** shows "Copied ✓"; **Share** opens the Android share sheet.
+     - **Custom** opens the calendar for From / To and filters correctly; **Last month** shows nothing.
+     - The log is in Google Sans Code and can be selected.
 
 ## Phase 6 — Items tracker + price history
 - [ ] FlashList of items, sort + filter + search, filtered-total footer

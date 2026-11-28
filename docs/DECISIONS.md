@@ -113,3 +113,12 @@ Decisions already made. Don't re-litigate; add new entries at the bottom with a 
   - **Repont / "pont beváltás" is always `points`.** The first version of the refund rule listed bare "visszaváltás", and Gemini then read "REPONT BEVÁLTÁS" as a deposit refund. The wording was narrowed to stop that.
   - **Amounts are copied exactly as printed.** In a test receipt whose lines didn't add up, Gemini had silently changed an item from 839 to 789 to match the total. Now it keeps 839 and explains the mismatch in `notes`; the Review screen shows the notes and an amber sanity banner.
   - Checked against the real API on 2026-11-28 with `gemini-3.8-flash` and `gemini-3.6-flash`: two test receipts (SPAR with Repont; TESCO with two deposits, a voucher and a deliberate total mismatch) came back correct on both models.
+
+## 2026-11-28 — Phase 5
+
+- **D62. Daily Log ranges.**
+  - Presets: **Today**, **This week**, **This month**, **Last month**, plus **Custom**. SPEC §2.4 lists the last three; Today was added for quick checks.
+  - Weeks start on **Monday** (Hungary). "This week" and "This month" run up to today; "Last month" is the whole previous month.
+  - Custom uses the Android system calendar (`DateTimePickerAndroid`, no future dates). A range picked backwards is swapped.
+  - The GRAND TOTAL switch resets to the SPEC default whenever the range changes: on for more than one day, off for a single day. The user can still toggle it.
+  - The log refreshes by itself when receipts change, using a live query on the receipt count and latest `updatedAt`. It's the Daily Log tab (`app/(tabs)/log.tsx`). The dev panel on Tab Two still exists until Phase 7 replaces the template tabs.
