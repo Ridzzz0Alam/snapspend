@@ -11,6 +11,8 @@ import {
   type ViewStyle,
 } from 'react-native';
 
+import { FONT } from '@/constants/fonts';
+
 import { Text, View } from './Themed';
 import { usePalette } from './ui';
 
@@ -178,7 +180,14 @@ export function Picker({
 const styles = StyleSheet.create({
   field: { gap: 4 },
   label: { fontSize: 13 },
-  input: { minHeight: 46, borderWidth: 1, borderRadius: 8, paddingHorizontal: 10, fontSize: 16 },
+  input: {
+    fontFamily: FONT.regular,
+    minHeight: 46,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    fontSize: 16,
+  },
   inputSmall: { minHeight: 44, fontSize: 15, paddingHorizontal: 8 },
   error: { fontSize: 12 },
   banner: { borderWidth: 1, borderRadius: 8, padding: 10, gap: 4 },

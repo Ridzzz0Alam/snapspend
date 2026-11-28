@@ -3,15 +3,15 @@
  */
 
 /**
- * Daily Log number style (SPEC §6): `.` thousands separators, no decimals,
- * no separator below 1000: `847`, `3.894`, `10.076`, `-1.250`.
+ * Daily Log number style (SPEC §6, D57): `,` thousands separators, no decimals,
+ * no separator below 1000: `847`, `3,894`, `10,076`, `-1,250`.
  * Non-integer input is rounded to the nearest forint. Use only for the Daily Log text.
  */
 export function formatAmount(n: number): string {
   const rounded = Math.round(n);
   const sign = rounded < 0 ? '-' : '';
   const digits = String(Math.abs(rounded));
-  return sign + digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return sign + digits.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
 
 /**

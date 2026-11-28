@@ -11,6 +11,7 @@ import {
 import { ExternalLink } from '@/components/ExternalLink';
 import { Text, View } from '@/components/Themed';
 import { Button, usePalette, type Palette } from '@/components/ui';
+import { FONT, MONO_FONT } from '@/constants/fonts';
 import { useGeminiSettings } from '@/hooks/useGeminiSettings';
 import { DEFAULT_GEMINI_MODEL, type GeminiResult } from '@/lib/gemini';
 
@@ -209,8 +210,15 @@ const styles = StyleSheet.create({
   container: { padding: 16, gap: 10 },
   heading: { fontSize: 17, fontWeight: '600' },
   section: { marginTop: 16 },
-  input: { minHeight: 48, borderWidth: 1, borderRadius: 8, paddingHorizontal: 12, fontSize: 16 },
-  masked: { fontFamily: 'SpaceMono', fontSize: 18, letterSpacing: 1 },
+  input: {
+    fontFamily: FONT.regular,
+    minHeight: 48,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    fontSize: 16,
+  },
+  masked: { fontFamily: MONO_FONT, fontSize: 18, letterSpacing: 1 },
   row: { flexDirection: 'row', gap: 12, flexWrap: 'wrap' },
   hint: { fontSize: 13, lineHeight: 18 },
   resultBox: { gap: 4 },

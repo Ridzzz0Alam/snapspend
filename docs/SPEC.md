@@ -209,15 +209,15 @@ Mirror this exactly in `src/lib/receiptSchema.ts` with zod. After parsing: apply
 - `total_only` / `manual` receipts: `STORE => {total} Ft` (no items, no `=`).
 - Day footer: `TOTAL - {dayTotal} Ft`
 - Range footer (optional): blank line, then `GRAND TOTAL - {sum} Ft`
-- Numbers: thousands separator `.` (Hungarian style), no separator below 1000. `847`, `3.894`, `10.076`.
+- Numbers: thousands separator `,`, no separator below 1000. `847`, `3,894`, `10,076` (owner's choice 2026-11-28, DECISIONS D57; was `.` before).
 - Use the Unicode `×` (U+00D7) and `−` (U+2212) characters.
 
 ### Golden test 1 (must match byte for byte)
 ```
 02/11/2026
 ALDI => Sauce beans 420g 239Ft + Sauce beans 420g 239Ft + Toast bread 500g 369Ft = 847 Ft
-SPAR (Interspar) => Corn snack 100g 2Db×155Ft/Db 310Ft + Peeled tomatoes 400g 259Ft + Banana 1.294Kg×449Ft/Kg 581Ft + Metal scourers 3pcs 299Ft + Red onion 1kg 2Db×277Ft/Db 554Ft + Milk chocolate bar 100g 2Db×459Ft/Db 918Ft + UHT milk 2.8% 1L 2Db×285Ft/Db 570Ft + Natural yogurt 3% 175g 85Ft + Chocolate donut 2Db×159Ft/Db 318Ft = 3.894 Ft
-TOTAL - 4.741 Ft
+SPAR (Interspar) => Corn snack 100g 2Db×155Ft/Db 310Ft + Peeled tomatoes 400g 259Ft + Banana 1.294Kg×449Ft/Kg 581Ft + Metal scourers 3pcs 299Ft + Red onion 1kg 2Db×277Ft/Db 554Ft + Milk chocolate bar 100g 2Db×459Ft/Db 918Ft + UHT milk 2.8% 1L 2Db×285Ft/Db 570Ft + Natural yogurt 3% 175g 85Ft + Chocolate donut 2Db×159Ft/Db 318Ft = 3,894 Ft
+TOTAL - 4,741 Ft
 ```
 (Kg quantities print with `.` as decimal: `1.294Kg`. This intentionally mirrors the owner's existing logs.)
 
@@ -225,21 +225,21 @@ TOTAL - 4.741 Ft
 ```
 06/11/2026
 SPAR => Sweet corn 285g 299Ft + Chopped tomatoes 2Db×295Ft/Db 590Ft = 889 Ft
-Kashmiri Bazar => 6.490 Ft
-TOTAL - 7.379 Ft
+Kashmiri Bazar => 6,490 Ft
+TOTAL - 7,379 Ft
 
 13/11/2026
-Yettel Recharge => 3.000 Ft
-TOTAL - 3.000 Ft
+Yettel Recharge => 3,000 Ft
+TOTAL - 3,000 Ft
 
-GRAND TOTAL - 10.379 Ft
+GRAND TOTAL - 10,379 Ft
 ```
 
 ### Golden test 3 (discount)
 ```
 07/11/2026
-TESCO => Dates 200g 449Ft + Milka Alpine milk chocolate 90g 2Db×699Ft/Db 1.398Ft + Bio bag 19Ft − Clubcard discount 100Ft − Clubcard discount 400Ft = 1.366 Ft
-TOTAL - 1.366 Ft
+TESCO => Dates 200g 449Ft + Milka Alpine milk chocolate 90g 2Db×699Ft/Db 1,398Ft + Bio bag 19Ft − Clubcard discount 100Ft − Clubcard discount 400Ft = 1,366 Ft
+TOTAL - 1,366 Ft
 ```
 
 ## 7. Non-functional

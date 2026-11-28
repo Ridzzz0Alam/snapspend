@@ -88,3 +88,23 @@ Decisions already made. Don't re-litigate; add new entries at the bottom with a 
   - "Thought" parts in the answer are ignored. A blocked prompt or a safety stop gives `blocked`, and no text gives `empty_response`.
   - Unparseable or invalid JSON gives `invalid_receipt` with the zod issues and the raw answer text, so the Review screen can offer manual edit or Retry. If the answer stopped at the token limit, the message says it was cut off.
   - Store aliases and category mapping are not done here; `normalizeReceipt` still does them.
+
+## 2026-11-28 — Phase 4
+
+- **D55. Receipts have an optional `category` column** (migration `0002_receipt_category`). SPEC §2.3 gives manual expenses an optional category, but only items had one. It's used by `manual` / `total_only` entries and is `null` for scanned receipts, whose items carry their own categories. Insights (Phase 7) should use it for receipts with no items.
+- **D56. Which `kind` a saved receipt gets.**
+  - Add expense: `total_only` when a slip photo is attached, otherwise `manual`.
+  - Review: a `scanned` receipt whose items were all removed is saved as `total_only`.
+- **D57. Daily Log numbers use `,` thousands separators** (owner's request, 2026-11-28; replaces the `.` rule in SPEC §6 and the Daily Log part of D31). Examples: `1,946 Ft`, `3,894 Ft`, `1,398Ft`. SPEC §6 and its three golden tests were updated to match, and they still pass byte for byte. Decimal points are unchanged (`1.294Kg`, `2.8%`). App screens keep `3,894.00 Ft` (D31).
+- **D58. Fonts: Google Sans (UI) and Google Sans Code (Daily Log)**, owner's request: "the font used in Google Keep". Both are SIL OFL 1.1, from `@expo-google-fonts/google-sans` and `@expo-google-fonts/google-sans-code`, loaded with `expo-font` (no native rebuild).
+  - Android doesn't make bold or medium versions of custom fonts by itself, so the themed `Text` picks the family for each weight (`fontForWeight`).
+  - Inputs and navigation headers and tabs use Google Sans too. Space Mono was removed.
+- **D59. How the scan queue works.**
+  - The queue lives in memory; unsaved jobs are lost if the app is closed. Saved receipts are in SQLite.
+  - Jobs run one at a time, oldest first: compress, then read with Gemini.
+  - One scanner session is one receipt with up to 10 pages. Each gallery photo is its own receipt, up to 20 per batch.
+  - Pages are decoded at most 3200 px, resized to a 1600 px long edge and saved as JPEG at 0.7.
+  - Scanner originals (our temporary files) are deleted after compressing. Gallery photos are never touched.
+  - On Save, the compressed copies go to `<document>/receipts/<receiptId>/page-N.jpg` before the database insert. They're removed again if the insert fails.
+  - Camera and microphone permissions are removed from the app; the ML Kit scanner runs inside Google Play services.
+- **D60. Shared UI pieces** live in `src/components/ui.tsx` (palette, button) and `src/components/form.tsx` (field, banner, segmented control, picker). `ReceiptForm` is shared by Review and Add expense.

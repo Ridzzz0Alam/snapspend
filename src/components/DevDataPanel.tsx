@@ -12,6 +12,7 @@ import { db } from '@/db/client';
 import { listByDateRange, notDeleted } from '@/db/repository';
 import { receipts } from '@/db/schema';
 import { clearSampleData, seedSampleData } from '@/db/seed';
+import { MONO_FONT } from '@/constants/fonts';
 import { formatDailyLog } from '@/lib/format';
 
 export function DevDataPanel() {
@@ -66,5 +67,5 @@ const styles = StyleSheet.create({
   },
   pressed: { opacity: 0.7 },
   buttonText: { color: '#fff', fontWeight: '600' },
-  log: { fontFamily: 'SpaceMono', fontSize: 12, lineHeight: 18 },
+  log: { fontFamily: MONO_FONT, fontSize: 12, lineHeight: 18 },
 });

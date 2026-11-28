@@ -3,11 +3,12 @@
  * https://docs.expo.io/guides/color-schemes/
  */
 import type React from 'react';
-import { Text as DefaultText, View as DefaultView } from 'react-native';
+import { Text as DefaultText, View as DefaultView, StyleSheet } from 'react-native';
 
 import { useColorScheme } from './useColorScheme';
 
 import Colors from '@/constants/Colors';
+import { fontForWeight } from '@/constants/fonts';
 
 type ThemeProps = {
   lightColor?: string;
@@ -34,8 +35,20 @@ export function useThemeColor(
 export function Text(props: TextProps) {
   const { style, lightColor, darkColor, ...otherProps } = props;
   const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
+  // Google Sans everywhere (D58): choose the family for the weight, unless a font is set explicitly.
+  const flat = StyleSheet.flatten(style) ?? {};
+  const fontFamily = flat.fontFamily ?? fontForWeight(flat.fontWeight);
 
-  return <DefaultText style={[{ color }, style]} {...otherProps} />;
+  return (
+    <DefaultText
+      style={[
+        { color },
+        style,
+        { fontFamily, fontWeight: flat.fontFamily ? flat.fontWeight : 'normal' },
+      ]}
+      {...otherProps}
+    />
+  );
 }
 
 export function View(props: ViewProps) {

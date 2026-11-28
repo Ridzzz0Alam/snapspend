@@ -1,4 +1,11 @@
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
+import {
+  GoogleSans_400Regular,
+  GoogleSans_500Medium,
+  GoogleSans_600SemiBold,
+  GoogleSans_700Bold,
+} from '@expo-google-fonts/google-sans';
+import { GoogleSansCode_400Regular } from '@expo-google-fonts/google-sans-code';
 import { useFonts } from 'expo-font';
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -10,6 +17,17 @@ import { db } from '@/db/client';
 import migrations from '@/db/migrations/migrations';
 
 import { useColorScheme } from '@/components/useColorScheme';
+import { FONT } from '@/constants/fonts';
+
+/** Navigation headers and tab labels in Google Sans (D58). */
+const fonts = {
+  regular: { fontFamily: FONT.regular, fontWeight: 'normal' },
+  medium: { fontFamily: FONT.medium, fontWeight: 'normal' },
+  bold: { fontFamily: FONT.bold, fontWeight: 'normal' },
+  heavy: { fontFamily: FONT.bold, fontWeight: 'normal' },
+} as const;
+const darkTheme = { ...DarkTheme, fonts };
+const lightTheme = { ...DefaultTheme, fonts };
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -26,7 +44,11 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+    GoogleSans_400Regular,
+    GoogleSans_500Medium,
+    GoogleSans_600SemiBold,
+    GoogleSans_700Bold,
+    GoogleSansCode_400Regular,
   });
   // Brings the SQLite schema up to date before any screen reads from it.
   const migration = useMigrations(db, migrations);
@@ -65,7 +87,7 @@ function RootLayoutNav() {
   const colorScheme = useColorScheme();
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+    <ThemeProvider value={colorScheme === 'dark' ? darkTheme : lightTheme}>
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal' }} />

@@ -65,7 +65,7 @@ describe('formatDailyLog', () => {
 
   it('prints a grand total for a single day when asked', () => {
     expect(formatDailyLog(golden3Receipts, { grandTotal: true })).toBe(
-      `${golden3Expected}\n\nGRAND TOTAL - 1.366 Ft`,
+      `${golden3Expected}\n\nGRAND TOTAL - 1,366 Ft`,
     );
   });
 });
@@ -98,7 +98,7 @@ describe('formatItemToken', () => {
         unitPrice: 4590,
         lineTotal: 2295,
       }),
-    ).toBe('Cheese 0.500Kg×4.590Ft/Kg 2.295Ft');
+    ).toBe('Cheese 0.500Kg×4,590Ft/Kg 2,295Ft');
   });
 });
 
@@ -116,7 +116,7 @@ describe('formatReceiptLine', () => {
       ],
     };
     expect(formatReceiptLine(r)).toBe(
-      'Kohinoor => Curry 1.500Ft + Service charge 10% 150Ft = 1.650 Ft',
+      'Kohinoor => Curry 1,500Ft + Service charge 10% 150Ft = 1,650 Ft',
     );
   });
 });
