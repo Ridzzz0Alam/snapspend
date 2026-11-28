@@ -64,6 +64,19 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="log"
+        options={{
+          title: 'Daily Log',
+          tabBarIcon: ({ color }) => (
+            <SymbolView
+              name={{ ios: 'list.bullet.rectangle', android: 'receipt_long', web: 'receipt_long' }}
+              tintColor={color}
+              size={28}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="two"
         options={{
           title: 'Tab Two',
