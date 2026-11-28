@@ -5,6 +5,15 @@ import { validScanned, validTotalOnly } from './fixtures/gemini';
 const clone = <T>(v: T): T => JSON.parse(JSON.stringify(v)) as T;
 
 describe('validateReceipt — valid', () => {
+  it('stores a negative adjustment as positive (sign comes from type, D53)', () => {
+    // Real Gemini answer: the receipt prints "REPONT BEVÁLTÁS -100".
+    const input = clone(validScanned);
+    input.adjustments[0]!.amount = -100;
+    const r = validateReceipt(input);
+    if (!r.ok) throw new Error(r.issues.join('\n'));
+    expect(r.data.adjustments[0]).toMatchObject({ type: 'points', amount: 100 });
+  });
+
   it('accepts a full scanned receipt and fills defaults', () => {
     const r = validateReceipt(validScanned);
     if (!r.ok) throw new Error(r.issues.join('\n'));
@@ -68,8 +77,8 @@ describe('validateReceipt — invalid', () => {
     ['unknown unit', mutate((r) => (r.items[1]!.unit = 'g')), 'items.1.unit'],
     ['zero quantity', mutate((r) => (r.items[0]!.quantity = 0)), 'items.0.quantity'],
     [
-      'negative adjustment',
-      mutate((r) => (r.adjustments[0]!.amount = -100)),
+      'fractional adjustment',
+      mutate((r) => (r.adjustments[0]!.amount = 99.5)),
       'adjustments.0.amount',
     ],
     [

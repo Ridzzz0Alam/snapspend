@@ -59,7 +59,8 @@ export const lineItemSchema = z.object({
 export const adjustmentSchema = z.object({
   type: z.enum(['discount', 'charge', 'points']),
   label: z.string().trim().min(1, 'Adjustment label is empty'),
-  amount: forints.nonnegative('Adjustment amount must be positive; sign comes from type'),
+  /** Stored positive; the sign comes from `type`. Receipts print "-100", so Gemini may too (D53). */
+  amount: forints.transform((n) => Math.abs(n)),
   appliesTo: optionalText,
 });
 
