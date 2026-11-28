@@ -42,5 +42,6 @@ yarn-error.*
 
 # Snap Spend: secrets (never commit)
 .env*
+!.env.example
 *.keystore
 credentials*

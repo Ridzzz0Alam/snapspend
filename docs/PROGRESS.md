@@ -79,7 +79,7 @@ _(empty — write blockers here)_
 - [ ] Image retention setting: delete receipt images older than Never / 6 months / 1 year; data stays (D46)
 - [ ] Dark/light theme, empty states, loading and error states everywhere
 - [ ] App icon + splash
-- [ ] Release signing with a local keystore (kept out of git); `cd android && ./gradlew assembleRelease` produces an APK
+- [ ] Release signing with a local keystore (kept out of git); `cd android && ./gradlew assembleRelease` produces an APK (check the release bundle has no `EXPO_PUBLIC_GEMINI_API_KEY` value, D52)
 - [ ] Install and smoke-test on **both** S23 Ultra and OnePlus 7 (Android 12)
 - [ ] `README.md`: setup, run, build APK, where the key goes, backup instructions
 - How to verify:

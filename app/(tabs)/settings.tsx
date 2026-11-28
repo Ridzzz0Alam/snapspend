@@ -115,15 +115,23 @@ function SettingsForm({ s }: { s: ReturnType<typeof useGeminiSettings> }) {
             </Text>
             <View style={styles.row}>
               <Button label="Replace" kind="secondary" onPress={() => setEditingKey(true)} />
-              <Button
-                label="Remove"
-                kind="danger"
-                onPress={() => {
-                  void s.removeKey();
-                  setTest({ status: 'idle' });
-                }}
-              />
+              {s.keySource === 'settings' && (
+                <Button
+                  label="Remove"
+                  kind="danger"
+                  onPress={() => {
+                    void s.removeKey();
+                    setTest({ status: 'idle' });
+                  }}
+                />
+              )}
             </View>
+            {s.keySource === 'env' && (
+              <Text style={[styles.hint, { color: c.muted }]}>
+                From the .env file on the computer (development builds only). A key saved here takes
+                priority.
+              </Text>
+            )}
           </>
         )}
 

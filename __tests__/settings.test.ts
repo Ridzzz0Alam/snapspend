@@ -1,5 +1,5 @@
 import { DEFAULT_GEMINI_MODEL } from '@/lib/gemini';
-import { cleanApiKey, maskApiKey, normalizeModelName } from '@/lib/settings';
+import { cleanApiKey, maskApiKey, normalizeModelName, resolveApiKey } from '@/lib/settings';
 
 describe('cleanApiKey', () => {
   it('removes whitespace and line breaks from a pasted key', () => {
@@ -39,5 +39,36 @@ describe('normalizeModelName', () => {
     expect(normalizeModelName('  ')).toBe(DEFAULT_GEMINI_MODEL);
     expect(normalizeModelName(null)).toBe(DEFAULT_GEMINI_MODEL);
     expect(normalizeModelName('models/')).toBe(DEFAULT_GEMINI_MODEL);
+  });
+});
+
+describe('resolveApiKey', () => {
+  it('prefers the key saved in Settings', () => {
+    expect(resolveApiKey({ saved: 'saved-key', envKey: 'env-key', isDev: true })).toEqual({
+      key: 'saved-key',
+      source: 'settings',
+    });
+  });
+
+  it('falls back to the .env key in a development build only', () => {
+    expect(resolveApiKey({ saved: null, envKey: ' env-key\n', isDev: true })).toEqual({
+      key: 'env-key',
+      source: 'env',
+    });
+    expect(resolveApiKey({ saved: null, envKey: 'env-key', isDev: false })).toEqual({
+      key: null,
+      source: null,
+    });
+  });
+
+  it('returns no key when neither is set', () => {
+    expect(resolveApiKey({ saved: '', envKey: undefined, isDev: true })).toEqual({
+      key: null,
+      source: null,
+    });
+    expect(resolveApiKey({ saved: null, envKey: '  ', isDev: true })).toEqual({
+      key: null,
+      source: null,
+    });
   });
 });
