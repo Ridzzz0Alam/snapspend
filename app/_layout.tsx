@@ -16,6 +16,7 @@ import 'react-native-reanimated';
 
 import { db } from '@/db/client';
 import migrations from '@/db/migrations/migrations';
+import { applyRetention } from '@/media/photoRetention';
 
 import { useColorScheme } from '@/components/useColorScheme';
 import { FONT } from '@/constants/fonts';
@@ -85,6 +86,11 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
+
+  // Photo retention (D74): once per launch, after the database is up to date. Never throws.
+  useEffect(() => {
+    applyRetention();
+  }, []);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

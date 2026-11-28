@@ -179,3 +179,11 @@ Decisions already made. Don't re-litigate; add new entries at the bottom with a 
   - After saving a store name, if any saved receipts still use the printed name, the app asks whether to rename them too. Matching ignores capitals and extra spaces, the same rule `applyStoreAlias` uses. Removing a store name never changes saved receipts.
   - The live lists go to the Gemini prompt (read when each scan starts), the Review, Add expense and Receipt detail forms (validation, duplicate check, category pickers) and the Items category filter.
   - The JSON backup has an optional `categories` array (still version 1, so older files import). On import, missing categories are added before "Other"; the local list and order win. Categories used by imported items are added even if the file's list doesn't have them.
+- **D74. How photo retention works** (implements D46).
+  - The setting is **per phone**, because photos aren't synced. It's stored in `expo-sqlite/kv-store` as `image_retention`, next to the model name (D49). An unknown or missing value means Never.
+  - Age is by the **receipt's date**, not when it was scanned. "6 months" and "1 year" are calendar months back from today, clamped to the end of shorter months. A receipt dated exactly on the cutoff keeps its photos.
+  - It runs once per app launch, after the database migration, and again right after the setting changes. A stricter setting first asks for confirmation, showing how many receipts' photos and how much space will go. A looser setting, or one with nothing to delete, saves straight away.
+  - The photo files and the receipt's `receipts/<id>` folder are deleted and `imagePaths` is set to null. Receipts, items and totals stay.
+  - Soft-deleted receipts follow the same age rule, so their photos are eventually removed.
+  - `updatedAt` is **not** changed, because photos are this phone's own data: removing them isn't an edit that should win a backup merge or a sync.
+  - Settings shows how much space receipt photos use on the phone.

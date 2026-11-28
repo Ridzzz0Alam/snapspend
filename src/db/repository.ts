@@ -2,7 +2,20 @@
  * Receipt repository. Thin data access only; totals, keys and formatting come from src/lib.
  * Every function takes the database as its first argument so tests can pass an in-memory one.
  */
-import { and, asc, desc, eq, gte, inArray, isNull, lte, sql, type SQL } from 'drizzle-orm';
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  gte,
+  inArray,
+  isNotNull,
+  isNull,
+  lt,
+  lte,
+  sql,
+  type SQL,
+} from 'drizzle-orm';
 
 import { FALLBACK_CATEGORY } from '@/lib/categories';
 import { normalizedKey } from '@/lib/normalize';
@@ -372,4 +385,33 @@ export function listRecent(db: AppDatabase, limit: number): ReceiptRow[] {
     )
     .limit(limit)
     .all();
+}
+
+// ---- Photo retention (D46, D74) ---------------------------------------------------
+
+/**
+ * Receipts dated before `cutoff` (ISO, exclusive) that still have photos, deleted ones included:
+ * their photos are on this phone too. `imagePaths` is the stored JSON array.
+ */
+export function listReceiptsWithImagesBefore(
+  db: AppDatabase,
+  cutoff: string,
+): { id: string; imagePaths: string }[] {
+  return db
+    .select({ id: receipts.id, imagePaths: receipts.imagePaths })
+    .from(receipts)
+    .where(and(lt(receipts.date, cutoff), isNotNull(receipts.imagePaths)))
+    .all() as { id: string; imagePaths: string }[];
+}
+
+/**
+ * Forgets the photos of these receipts. `updatedAt` is left alone: photos belong to this phone
+ * and aren't synced, so removing them is not an edit the other phone should take.
+ */
+export function clearImagePaths(db: AppDatabase, ids: readonly string[]): void {
+  if (ids.length === 0) return;
+  db.update(receipts)
+    .set({ imagePaths: null })
+    .where(inArray(receipts.id, [...ids]))
+    .run();
 }

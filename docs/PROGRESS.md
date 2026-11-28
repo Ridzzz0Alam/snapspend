@@ -5,7 +5,7 @@ Tick `[x]` as you finish each item, commit, and add a "How to verify" note when 
 
 ## HANDOFF — read this first (2026-11-28)
 
-**Where we stopped:** Phases 0–7 are complete. **Phase 8** is in progress: Excel export + JSON backup / merge import and the category / store-name editors are done and verified on the phone. **Next item: image retention.** Then polish → icon + splash → README. The owner asked to do **release signing and the two-phone smoke test last**, after the other Phase 8 items, and to agree the signing-key password with them.
+**Where we stopped:** Phases 0–7 are complete. **Phase 8** is in progress: Excel export + JSON backup / merge import, the category / store-name editors and photo retention are done and verified on the phone. **Next item: dark/light theme, empty, loading and error states.** Then icon + splash → README. The owner asked to do **release signing and the two-phone smoke test last**, after the other Phase 8 items, and to agree the signing-key password with them.
 
 **Owner's working preferences**
 - At the end of every phase, give the owner a list of files **added / changed** in that phase (e.g. `git diff --stat <commit before phase>..HEAD`), grouped, with a one-line note per file. Point out which files are worth reviewing and which are generated.
@@ -13,7 +13,7 @@ Tick `[x]` as you finish each item, commit, and add a "How to verify" note when 
 - Commits are conventional and small, pushed to `origin main`, with **no AI attribution**.
 
 **State checks**
-- `npx tsc --noEmit`, `npx eslint app src __tests__` and `npx jest` (325 tests) all pass.
+- `npx tsc --noEmit`, `npx eslint app src __tests__` and `npx jest` (333 tests) all pass.
 - The working tree is clean and pushed.
 - The OnePlus 7 has the latest debug build installed; the native modules are in sync with `package.json`.
 
@@ -149,7 +149,7 @@ _(empty — write blockers here)_
 ## Phase 8 — Backup, polish, release APK
 - [x] Excel (.xlsx) export of items and receipts (owner's choice, replaces CSV, D71), JSON backup export/import (round-trip test); import **merges** by id + `updatedAt` (D44)
 - [x] Store alias + category editors in Settings (D73)
-- [ ] Image retention setting: delete receipt images older than Never / 6 months / 1 year; data stays (D46)
+- [x] Image retention setting: delete receipt images older than Never / 6 months / 1 year; data stays (D46, D74)
 - [ ] Dark/light theme, empty states, loading and error states everywhere
 - [ ] App icon + splash
 - [ ] _(Deferred by the owner to the end of Phase 8, after the other items)_ Release signing with a local keystore (kept out of git); `cd android && ./gradlew assembleRelease` produces an APK (check the release bundle has no `EXPO_PUBLIC_GEMINI_API_KEY` value, D52)
@@ -159,6 +159,7 @@ _(empty — write blockers here)_
   1. Excel / backup: `__tests__/xlsx.test.ts` (zip parts, sheet names, header / filter / frozen pane, date serials, escaping), `__tests__/exportWorkbook.test.ts` (both sheets' rows), and `__tests__/backup.test.ts` (round trip incl. Daily Log byte-identical; second import changes nothing; newer wins / older loses; deletes travel; local receipts and aliases kept; bad files rejected).
   2. On the phone (OnePlus 7, 2026-11-28): Settings → Backup & export. **Export to Excel** opens the share sheet. The exported file, pulled from the phone and read with LibreOffice, had all 9 items and 2 receipts correct, and the owner opened it on the phone. **Back up (JSON)** produced a valid v1 backup. **Import backup** of that file worked (owner-verified).
   3. Category and store-name editors (D73): `__tests__/lists.test.ts` (default list and alias, add before Other, move, rename and delete carry over to items and receipts and bump `updatedAt`, "Other" protected, usage counts, alias add/edit/remove, renaming saved receipts, name checks) and `__tests__/backup.test.ts` (categories merged on import, including ones only used by items). On the phone (OnePlus 7, 2026-11-28; owner-verified): Settings → Lists → **Categories** and **Store names** both work, including add, move, rename, delete, renaming saved receipts to a new store name, and the edited lists showing up in the pickers and the Items filter. Migration `0003_categories` ran on the phone with no errors.
+  4. Photo retention (D74): `__tests__/retention.test.ts` (cutoff by calendar months across year ends, month-end and leap-year clamping, stricter-or-not, stored-value fallback, size text) and `__tests__/lists.test.ts` (receipts with photos before the cutoff, deleted ones included, cutoff day kept; clearing paths keeps items and `updatedAt`). On the phone (OnePlus 7, 2026-11-28; owner-verified): Settings → **Receipt photos** shows the space used. A test expense dated 01/01/2025 with a photo: choosing **1 year** asked to delete 1 receipt's photos; after confirming, the expense kept its details without the photo and the space shown went down.
 
 ## Phase 9 — Two-phone cloud sync (DECISIONS D43)
 - [ ] Decide whether receipt images sync too (needs file storage, not Neon) (D46)

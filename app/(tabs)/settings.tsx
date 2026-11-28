@@ -1,6 +1,6 @@
 /**
  * Settings (SPEC §2.8): Gemini API key, model name and "Test key"; links to the category and
- * store-name editors (D73); backup & export.
+ * store-name editors (D73); receipt photo retention (D74); backup & export.
  */
 import { router, type Href } from 'expo-router';
 import { useState } from 'react';
@@ -15,6 +15,7 @@ import {
 
 import { BackupSection } from '@/components/BackupSection';
 import { DevDataPanel } from '@/components/DevDataPanel';
+import { PhotoRetentionSection } from '@/components/PhotoRetentionSection';
 import { ExternalLink } from '@/components/ExternalLink';
 import { Text, View } from '@/components/Themed';
 import { Button, usePalette, type Palette } from '@/components/ui';
@@ -181,6 +182,8 @@ function SettingsForm({ s }: { s: ReturnType<typeof useGeminiSettings> }) {
         {test.status === 'done' && <TestResult result={test.result} palette={c} />}
 
         <ListsSection />
+
+        <PhotoRetentionSection />
 
         <BackupSection />
 

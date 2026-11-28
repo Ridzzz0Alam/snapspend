@@ -15,9 +15,11 @@ import {
   saveStoreAlias,
 } from '@/db/lists';
 import {
+  clearImagePaths,
   createReceiptWithItems,
   deleteReceipt,
   getReceipt,
+  listReceiptsWithImagesBefore,
   type ReceiptInput,
 } from '@/db/repository';
 import type { AppDatabase } from '@/db/types';
@@ -200,5 +202,42 @@ describe('checkStoreAlias', () => {
     expect(checkStoreAlias(' interspar ', 'X', existing)).toEqual({
       raw: 'Already mapped to "SPAR (Interspar)"',
     });
+  });
+});
+
+describe('photo retention queries (D74)', () => {
+  it('finds receipts with photos dated before the cutoff, deleted ones included', () => {
+    const deps = testDeps(1_000);
+    const old = createReceiptWithItems(
+      db,
+      receipt({ date: '2026-01-10', imagePaths: ['file:///r/a/page-1.jpg'] }),
+      deps,
+    );
+    const oldGone = createReceiptWithItems(
+      db,
+      receipt({ date: '2025-12-01', imagePaths: ['file:///r/b/page-1.jpg'] }),
+      deps,
+    );
+    createReceiptWithItems(db, receipt({ date: '2026-01-05' }), deps); // no photo
+    createReceiptWithItems(
+      db,
+      receipt({ date: '2026-05-28', imagePaths: ['file:///r/c/page-1.jpg'] }),
+      deps,
+    ); // on the cutoff day: kept
+    deleteReceipt(db, oldGone, { now: () => 2_000 });
+
+    const found = listReceiptsWithImagesBefore(db, '2026-05-28');
+    expect(found.map((r) => r.id).sort()).toEqual([old, oldGone].sort());
+    expect(JSON.parse(found.find((r) => r.id === old)!.imagePaths)).toEqual([
+      'file:///r/a/page-1.jpg',
+    ]);
+
+    const before = getReceipt(db, old)!;
+    clearImagePaths(db, [old, oldGone]);
+    const after = getReceipt(db, old)!;
+    expect(after.imagePaths).toBeNull();
+    expect(after.updatedAt).toBe(before.updatedAt);
+    expect(after.items).toHaveLength(2);
+    expect(listReceiptsWithImagesBefore(db, '2026-05-28')).toEqual([]);
   });
 });
