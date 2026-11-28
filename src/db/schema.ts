@@ -25,6 +25,8 @@ export const receipts = sqliteTable(
     /** Epoch ms. */
     createdAt: integer('created_at').notNull(),
     updatedAt: integer('updated_at').notNull(),
+    /** Epoch ms when soft-deleted (D44); null = live. Deleted rows are kept so the delete can sync. */
+    deletedAt: integer('deleted_at'),
   },
   (t) => [index('receipts_date_idx').on(t.date)],
 );

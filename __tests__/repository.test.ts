@@ -173,17 +173,54 @@ describe('updateReceipt', () => {
   });
 });
 
-describe('deleteReceipt', () => {
-  it('cascades to items and adjustments', () => {
-    const id = createReceiptWithItems(db, tesco);
-    expect(deleteReceipt(db, id)).toBe(true);
-    expect(rowCount(receipts)).toBe(0);
-    expect(rowCount(items)).toBe(0);
-    expect(rowCount(adjustments)).toBe(0);
+describe('deleteReceipt (soft delete, D44)', () => {
+  it('sets deletedAt and updatedAt but keeps the rows, items and adjustments', () => {
+    const id = createReceiptWithItems(db, tesco, testDeps(1_000));
+    expect(db.select().from(receipts).get()?.deletedAt).toBeNull();
+
+    expect(deleteReceipt(db, id, { now: () => 5_000 })).toBe(true);
+    const row = db.select().from(receipts).get();
+    expect(row).toMatchObject({ id, deletedAt: 5_000, updatedAt: 5_000, createdAt: 1_000 });
+    expect(rowCount(receipts)).toBe(1);
+    expect(rowCount(items)).toBe(tesco.items.length);
+    expect(rowCount(adjustments)).toBe(tesco.adjustments.length);
   });
 
-  it('returns false for an unknown id', () => {
+  it('returns false for an unknown or already deleted id', () => {
     expect(deleteReceipt(db, 'nope')).toBe(false);
+    const id = createReceiptWithItems(db, tesco);
+    expect(deleteReceipt(db, id, { now: () => 5_000 })).toBe(true);
+    expect(deleteReceipt(db, id, { now: () => 9_000 })).toBe(false);
+    expect(db.select().from(receipts).get()?.deletedAt).toBe(5_000);
+  });
+
+  it('hides deleted receipts from listByDateRange and listItems', () => {
+    const deps = testDeps();
+    const ids = seedReceipts.map((r) => createReceiptWithItems(db, r, deps));
+    const tescoId = ids[seedReceipts.findIndex((r) => r.store === 'TESCO')]!;
+    deleteReceipt(db, tescoId);
+
+    const listed = listByDateRange(db, '2026-11-01', '2026-11-30');
+    expect(listed).toHaveLength(seedReceipts.length - 1);
+    expect(listed.map((r) => r.id)).not.toContain(tescoId);
+    expect(listItems(db).map((r) => r.receiptId)).not.toContain(tescoId);
+    expect(listItems(db, { stores: ['TESCO'] })).toEqual([]);
+  });
+
+  it('leaves deleted receipts out of the Daily Log totals', () => {
+    for (const r of golden3Receipts) createReceiptWithItems(db, r);
+    const extra = createReceiptWithItems(db, { ...tesco, printedTotal: 999 });
+    deleteReceipt(db, extra);
+    expect(
+      formatDailyLog(listByDateRange(db, '2026-11-01', '2026-11-30'), { grandTotal: false }),
+    ).toBe(golden3Expected);
+  });
+
+  it('updateReceipt refuses a deleted receipt', () => {
+    const id = createReceiptWithItems(db, tesco);
+    deleteReceipt(db, id);
+    expect(updateReceipt(db, id, { ...tesco, store: 'ALDI' })).toBe(false);
+    expect(db.select().from(receipts).get()?.store).toBe('TESCO');
   });
 });
 
@@ -267,5 +304,14 @@ describe('dev seed', () => {
 
     expect(clearSampleData(db)).toBe(6);
     expect(listByDateRange(db, '2026-11-01', '2026-11-30').map((r) => r.id)).toEqual([real]);
+  });
+
+  it('counts only live sample receipts and clears deleted ones too', () => {
+    seedSampleData(db);
+    const [first] = listByDateRange(db, '2026-11-01', '2026-11-30');
+    deleteReceipt(db, first!.id);
+    expect(countSampleReceipts(db)).toBe(5);
+    expect(clearSampleData(db)).toBe(6);
+    expect(rowCount(receipts)).toBe(0);
   });
 });

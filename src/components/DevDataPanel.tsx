@@ -9,13 +9,15 @@ import { Pressable, ScrollView, StyleSheet } from 'react-native';
 
 import { Text, View } from '@/components/Themed';
 import { db } from '@/db/client';
-import { listByDateRange } from '@/db/repository';
+import { listByDateRange, notDeleted } from '@/db/repository';
 import { receipts } from '@/db/schema';
 import { clearSampleData, seedSampleData } from '@/db/seed';
 import { formatDailyLog } from '@/lib/format';
 
 export function DevDataPanel() {
-  const { data, updatedAt } = useLiveQuery(db.select({ n: count() }).from(receipts));
+  const { data, updatedAt } = useLiveQuery(
+    db.select({ n: count() }).from(receipts).where(notDeleted),
+  );
   const total = data[0]?.n ?? 0;
 
   const log = useMemo(() => {

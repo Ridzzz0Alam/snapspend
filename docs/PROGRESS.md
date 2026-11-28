@@ -42,7 +42,7 @@ _(empty — write blockers here)_
   3. Adding expo-sqlite/expo-crypto needed one native rebuild (`npx expo run:android`, 1m 27s cached). After changing `src/db/schema.ts`, run `npm run db:generate` and commit the new migration.
 
 ## Phase 3 — Settings + Gemini client
-- [ ] (Sync prep, DECISIONS D44) Soft delete: `receipts.deletedAt` + migration; `deleteReceipt` sets it; every list/total query skips deleted rows; tests updated
+- [x] (Sync prep, DECISIONS D44) Soft delete: `receipts.deletedAt` + migration; `deleteReceipt` sets it; every list/total query skips deleted rows; tests updated
 - [ ] Settings screen: API key in expo-secure-store (masked), model name, "Test key" button (tiny text-only request)
 - [ ] `src/lib/gemini.ts`: build request, fetch with timeout + one retry, parse → zod → typed result; errors as typed results not throws
 - [ ] Unit tests with mocked fetch: success, malformed JSON, 400, 429, timeout

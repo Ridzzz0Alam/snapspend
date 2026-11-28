@@ -2,7 +2,7 @@
  * Receipt repository. Thin data access only; totals, keys and formatting come from src/lib.
  * Every function takes the database as its first argument so tests can pass an in-memory one.
  */
-import { and, asc, desc, eq, gte, inArray, lte, sql, type SQL } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, inArray, isNull, lte, sql, type SQL } from 'drizzle-orm';
 
 import { FALLBACK_CATEGORY } from '@/lib/categories';
 import { normalizedKey } from '@/lib/normalize';
@@ -59,6 +59,9 @@ export interface RepoDeps {
   newId?: () => string;
   now?: () => number;
 }
+
+/** Rows that haven't been soft-deleted. Every read and total must include this. */
+export const notDeleted = isNull(receipts.deletedAt);
 
 // ---- Writes ---------------------------------------------------------------------
 
@@ -141,7 +144,7 @@ export function createReceiptWithItems(
 
 /**
  * Replaces a receipt's fields, items and adjustments (the Review / Detail screens edit everything at once).
- * Keeps `createdAt`. Returns false if the receipt doesn't exist.
+ * Keeps `createdAt`. Returns false if the receipt doesn't exist or was deleted.
  */
 export function updateReceipt(
   db: AppDatabase,
@@ -150,7 +153,11 @@ export function updateReceipt(
   { newId = defaultNewId, now = Date.now }: RepoDeps = {},
 ): boolean {
   return db.transaction((tx) => {
-    const existing = tx.select({ id: receipts.id }).from(receipts).where(eq(receipts.id, id)).get();
+    const existing = tx
+      .select({ id: receipts.id })
+      .from(receipts)
+      .where(and(eq(receipts.id, id), notDeleted))
+      .get();
     if (!existing) return false;
     tx.update(receipts)
       .set({ ...receiptFields(input), updatedAt: now() })
@@ -163,11 +170,20 @@ export function updateReceipt(
   });
 }
 
-/** Deletes a receipt; items and adjustments go with it (ON DELETE CASCADE). Returns false if not found. */
-export function deleteReceipt(db: AppDatabase, id: string): boolean {
+/**
+ * Soft-deletes a receipt (D44): sets `deletedAt` and `updatedAt`, keeps the row, items and adjustments
+ * so the delete can sync to the other phone. Returns false if not found or already deleted.
+ */
+export function deleteReceipt(
+  db: AppDatabase,
+  id: string,
+  { now = Date.now }: Pick<RepoDeps, 'now'> = {},
+): boolean {
+  const ts = now();
   const deleted = db
-    .delete(receipts)
-    .where(eq(receipts.id, id))
+    .update(receipts)
+    .set({ deletedAt: ts, updatedAt: ts })
+    .where(and(eq(receipts.id, id), notDeleted))
     .returning({ id: receipts.id })
     .all();
   return deleted.length > 0;
@@ -175,9 +191,9 @@ export function deleteReceipt(db: AppDatabase, id: string): boolean {
 
 // ---- Reads ----------------------------------------------------------------------
 
-/** Receipts with `from <= date <= to` (ISO dates, inclusive), ordered by date, time, createdAt. */
+/** Live receipts with `from <= date <= to` (ISO dates, inclusive), ordered by date, time, createdAt. */
 export function listByDateRange(db: AppDatabase, from: string, to: string): StoredReceipt[] {
-  const inRange = and(gte(receipts.date, from), lte(receipts.date, to));
+  const inRange = and(gte(receipts.date, from), lte(receipts.date, to), notDeleted);
   const rows = db
     .select()
     .from(receipts)
@@ -241,7 +257,7 @@ export function listItems(
   filters: ItemFilters = {},
   sort: ItemSort = { by: 'date', dir: 'desc' },
 ): ItemListRow[] {
-  const where: SQL[] = [];
+  const where: SQL[] = [notDeleted];
   if (filters.from) where.push(gte(receipts.date, filters.from));
   if (filters.to) where.push(lte(receipts.date, filters.to));
   if (filters.stores?.length) where.push(inArray(receipts.store, filters.stores));
@@ -269,7 +285,7 @@ export function listItems(
     .select({ item: items, date: receipts.date, time: receipts.time, store: receipts.store })
     .from(items)
     .innerJoin(receipts, eq(items.receiptId, receipts.id))
-    .where(where.length ? and(...where) : undefined)
+    .where(and(...where))
     .orderBy(...primary, ...tieBreak)
     .all()
     .map(({ item, date, time, store }) => ({ ...item, date, time, store }));

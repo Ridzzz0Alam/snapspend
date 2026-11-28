@@ -1,0 +1,1 @@
+ALTER TABLE `receipts` ADD `deleted_at` integer;
