@@ -53,12 +53,20 @@ _(empty — write blockers here)_
   4. Soft delete: the phone's database shows migration `0001_soft_delete` applied (`receipts.deleted_at` exists).
 
 ## Phase 4 — Scan → Review → Save
-- [ ] Scanner via react-native-document-scanner-plugin (multi-page) + gallery fallback via expo-image-picker (multi-select = batch queue)
-- [ ] Compress with expo-image-manipulator; save **the compressed copy** (not the original) in app storage (D45)
-- [ ] Review screen with editable rows, adjustments, category picker, sanity-check banner, duplicate warning
-- [ ] Save in a single transaction; Retry and Discard work
-- [ ] Manual "Add expense" form (kind manual / total_only)
-- How to verify: scan a real SPAR receipt end-to-end on the S23 Ultra.
+- [x] Scanner via react-native-document-scanner-plugin (multi-page) + gallery fallback via expo-image-picker (multi-select = batch queue)
+- [x] Compress with expo-image-manipulator; save **the compressed copy** (not the original) in app storage (D45)
+- [x] Review screen with editable rows, adjustments, category picker, sanity-check banner, duplicate warning
+- [x] Save in a single transaction; Retry and Discard work
+- [x] Manual "Add expense" form (kind manual / total_only)
+- How to verify:
+  1. `npx tsc --noEmit` and `npx jest` pass (258 tests). Main files: `__tests__/scanQueue.test.ts` (queue steps, one job at a time, retry from the right step), `__tests__/reviewDraft.test.ts` (Gemini answer → editable form → validated input, field errors, live sanity check, manual entries), `__tests__/images.test.ts`, `__tests__/dates.test.ts`, and `__tests__/repository.test.ts` (`findDuplicates`, preset receipt id, receipt category).
+  2. Native rebuild needed once for the scanner, image picker, image manipulator and file system (`npx expo run:android`, or prebuild + `./gradlew :app:assembleDebug` + `adb install`). The app has no camera or microphone permission.
+  3. On the phone (OnePlus 7, 2026-11-28):
+     - **Scan tab → Scan receipt** on a real TESCO receipt, then Review and Save. It appears in the Daily Log on Tab Two.
+     - **Import from gallery** with several photos: each becomes its own queued receipt. A saved ALDI receipt had 6 items, including 1.312 kg bananas, and its items matched the printed total.
+     - **Retry with Gemini** and **Discard** work, and **Add expense** works. Its save uses the same `saveReceipt` code as Review, but no manual entry had been saved on the phone by 2026-11-28.
+     - Each saved receipt has one compressed `files/receipts/<id>/page-1.jpg` (~120–170 KB, D45).
+  4. The S23 Ultra end-to-end scan (originally planned here) is still to do; it's covered by the Phase 8 two-phone smoke test.
 
 ## Phase 5 — Daily Log screen
 - [ ] Range presets + custom picker
