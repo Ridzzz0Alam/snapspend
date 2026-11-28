@@ -9,6 +9,7 @@ import {
   findDuplicates,
   listByDateRange,
   listItems,
+  listStores,
   updateReceipt,
   type ReceiptInput,
 } from '@/db/repository';
@@ -321,6 +322,29 @@ describe('listItems', () => {
       'Milk chocolate bar',
       'Chocolate donut',
     ]);
+  });
+
+  it('filters one product by normalizedKey (price history)', () => {
+    const rows = listItems(db, { normalizedKey: 'sauce beans 420g' });
+    expect(rows.map((r) => [r.date, r.store, r.lineTotal])).toEqual([
+      ['2026-11-02', 'ALDI', 239],
+      ['2026-11-02', 'ALDI', 239],
+    ]);
+  });
+
+  it('skips items of deleted receipts and lists live stores A–Z', () => {
+    expect(listStores(db)).toEqual([
+      'ALDI',
+      'Kashmiri Bazar',
+      'SPAR',
+      'SPAR (Interspar)',
+      'TESCO',
+      'Yettel Recharge',
+    ]);
+    const aldi = listByDateRange(db, '2026-11-02', '2026-11-02').find((r) => r.store === 'ALDI')!;
+    deleteReceipt(db, aldi.id);
+    expect(listStores(db)).not.toContain('ALDI');
+    expect(listItems(db, { normalizedKey: 'sauce beans 420g' })).toEqual([]);
   });
 
   it('sorts by amount (largest first by default) and by name A–Z', () => {

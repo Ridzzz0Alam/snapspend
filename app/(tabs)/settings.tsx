@@ -8,6 +8,7 @@ import {
   TextInput,
 } from 'react-native';
 
+import { DevDataPanel } from '@/components/DevDataPanel';
 import { ExternalLink } from '@/components/ExternalLink';
 import { Text, View } from '@/components/Themed';
 import { Button, usePalette, type Palette } from '@/components/ui';
@@ -171,6 +172,8 @@ function SettingsForm({ s }: { s: ReturnType<typeof useGeminiSettings> }) {
           />
         </View>
         {test.status === 'done' && <TestResult result={test.result} palette={c} />}
+
+        {__DEV__ && <DevDataPanel />}
       </ScrollView>
     </KeyboardAvoidingView>
   );

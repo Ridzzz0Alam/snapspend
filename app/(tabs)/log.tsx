@@ -4,8 +4,6 @@
  */
 import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import * as Clipboard from 'expo-clipboard';
-import { max, count } from 'drizzle-orm';
-import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, Share, StyleSheet, Switch } from 'react-native';
 
@@ -13,8 +11,8 @@ import { Text, View } from '@/components/Themed';
 import { Button, usePalette } from '@/components/ui';
 import { MONO_FONT } from '@/constants/fonts';
 import { db } from '@/db/client';
-import { listByDateRange, notDeleted } from '@/db/repository';
-import { receipts } from '@/db/schema';
+import { listByDateRange } from '@/db/repository';
+import { useReceiptsVersion } from '@/hooks/useReceiptsVersion';
 import { isoFromDate } from '@/lib/dates';
 import { formatDailyLog } from '@/lib/format';
 import { formatFt } from '@/lib/money';
@@ -55,14 +53,7 @@ export default function DailyLogScreen() {
     setCopied(false);
   }
 
-  // Re-run whenever receipts change (save, edit, delete).
-  const { data: signal } = useLiveQuery(
-    db
-      .select({ n: count(), changed: max(receipts.updatedAt) })
-      .from(receipts)
-      .where(notDeleted),
-  );
-  const changeKey = `${signal[0]?.n ?? 0}|${signal[0]?.changed ?? 0}`;
+  const changeKey = useReceiptsVersion();
 
   const { text, receiptCount, total } = useMemo(() => {
     void changeKey;

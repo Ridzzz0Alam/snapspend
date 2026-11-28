@@ -267,6 +267,8 @@ export interface ItemFilters {
   categories?: string[];
   /** Matches English and original names; case- and accent-insensitive. */
   search?: string;
+  /** One product (price history). */
+  normalizedKey?: string;
 }
 
 export interface ItemSort {
@@ -292,6 +294,7 @@ export function listItems(
   if (filters.to) where.push(lte(receipts.date, filters.to));
   if (filters.stores?.length) where.push(inArray(receipts.store, filters.stores));
   if (filters.categories?.length) where.push(inArray(items.category, filters.categories));
+  if (filters.normalizedKey) where.push(eq(items.normalizedKey, filters.normalizedKey));
 
   const dir = sort.dir ?? (sort.by === 'date' || sort.by === 'amount' ? 'desc' : 'asc');
   const order = dir === 'asc' ? asc : desc;
@@ -322,4 +325,15 @@ export function listItems(
 
   const search = filters.search?.trim();
   return search ? rows.filter((r) => matchesSearch([r.nameEn, r.nameOriginal], search)) : rows;
+}
+
+/** Store names of live receipts, A–Z (case-insensitive), for the Items store filter. */
+export function listStores(db: AppDatabase): string[] {
+  return db
+    .selectDistinct({ store: receipts.store })
+    .from(receipts)
+    .where(notDeleted)
+    .orderBy(sql`${receipts.store} COLLATE NOCASE`)
+    .all()
+    .map((r) => r.store);
 }

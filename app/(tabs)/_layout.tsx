@@ -77,16 +77,12 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="two"
+        name="items"
         options={{
-          title: 'Tab Two',
+          title: 'Items',
           tabBarIcon: ({ color }) => (
             <SymbolView
-              name={{
-                ios: 'chevron.left.forwardslash.chevron.right',
-                android: 'code',
-                web: 'code',
-              }}
+              name={{ ios: 'cart', android: 'shopping_cart', web: 'shopping_cart' }}
               tintColor={color}
               size={28}
             />
