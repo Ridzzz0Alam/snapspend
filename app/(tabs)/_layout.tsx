@@ -47,6 +47,23 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="scan"
+        options={{
+          title: 'Scan',
+          tabBarIcon: ({ color }) => (
+            <SymbolView
+              name={{
+                ios: 'doc.text.viewfinder',
+                android: 'document_scanner',
+                web: 'document_scanner',
+              }}
+              tintColor={color}
+              size={28}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="two"
         options={{
           title: 'Tab Two',

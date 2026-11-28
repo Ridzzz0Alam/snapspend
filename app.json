@@ -38,7 +38,15 @@
       "./plugins/withArm64Only",
       "./plugins/withCmakeDir",
       "expo-sqlite",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Snap Spend imports receipt photos from your gallery.",
+          "cameraPermission": false,
+          "microphonePermission": false
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

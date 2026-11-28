@@ -3,7 +3,6 @@ import { useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
-  Pressable,
   ScrollView,
   StyleSheet,
   TextInput,
@@ -11,7 +10,7 @@ import {
 
 import { ExternalLink } from '@/components/ExternalLink';
 import { Text, View } from '@/components/Themed';
-import { useColorScheme } from '@/components/useColorScheme';
+import { Button, usePalette, type Palette } from '@/components/ui';
 import { useGeminiSettings } from '@/hooks/useGeminiSettings';
 import { DEFAULT_GEMINI_MODEL, type GeminiResult } from '@/lib/gemini';
 
@@ -205,54 +204,6 @@ function TestResult({
   );
 }
 
-type ButtonKind = 'primary' | 'secondary' | 'danger';
-
-function Button({
-  label,
-  onPress,
-  disabled,
-  kind = 'primary',
-}: {
-  label: string;
-  onPress: () => void;
-  disabled?: boolean;
-  kind?: ButtonKind;
-}) {
-  const c = usePalette();
-  const bg = { primary: '#2f6fed', secondary: c.field, danger: '#c62828' }[kind];
-  const fg = kind === 'secondary' ? c.text : '#fff';
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityState={{ disabled: !!disabled }}
-      disabled={disabled}
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.button,
-        { backgroundColor: bg, borderColor: c.border },
-        (pressed || disabled) && styles.dim,
-      ]}
-    >
-      <Text style={[styles.buttonText, { color: fg }]}>{label}</Text>
-    </Pressable>
-  );
-}
-
-type Palette = ReturnType<typeof usePalette>;
-
-function usePalette() {
-  const dark = useColorScheme() === 'dark';
-  return {
-    text: dark ? '#fff' : '#000',
-    muted: dark ? '#9a9a9a' : '#666',
-    border: dark ? '#444' : '#ccc',
-    field: dark ? '#1c1c1e' : '#f2f2f2',
-    link: dark ? '#7aa7ff' : '#2f6fed',
-    ok: dark ? '#66bb6a' : '#2e7d32',
-    error: dark ? '#ef5350' : '#c62828',
-  };
-}
-
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   container: { padding: 16, gap: 10 },
@@ -262,15 +213,6 @@ const styles = StyleSheet.create({
   masked: { fontFamily: 'SpaceMono', fontSize: 18, letterSpacing: 1 },
   row: { flexDirection: 'row', gap: 12, flexWrap: 'wrap' },
   hint: { fontSize: 13, lineHeight: 18 },
-  button: {
-    minHeight: 44,
-    paddingHorizontal: 18,
-    justifyContent: 'center',
-    borderRadius: 8,
-    borderWidth: StyleSheet.hairlineWidth,
-  },
-  dim: { opacity: 0.5 },
-  buttonText: { fontWeight: '600', fontSize: 15 },
   resultBox: { gap: 4 },
   result: { fontSize: 15, fontWeight: '600' },
 });
