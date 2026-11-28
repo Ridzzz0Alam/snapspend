@@ -3,6 +3,45 @@
 Work top to bottom. Only the first phase with unchecked items is in scope.
 Tick `[x]` as you finish each item, commit, and add a "How to verify" note when a phase is complete.
 
+## HANDOFF — read this first (2026-11-28)
+
+**Where we stopped:** Phases 0–7 are complete. **Phase 8** is in progress: its first item (Excel export + JSON backup / merge import) is done and verified on the phone. **Next item: "Store alias + category editors in Settings".** Then image retention → polish → icon + splash → README. The owner asked to do **release signing and the two-phone smoke test last**, after the other Phase 8 items, and to agree the signing-key password with them.
+
+**Owner's working preferences**
+- At the end of every phase, give the owner a list of files **added / changed** in that phase (e.g. `git diff --stat <commit before phase>..HEAD`), grouped, with a one-line note per file. Point out which files are worth reviewing and which are generated.
+- Ask the owner to test on the phone before ticking UI items; tick and commit once confirmed.
+- Commits are conventional and small, pushed to `origin main`, with **no AI attribution**.
+
+**State checks**
+- `npx tsc --noEmit`, `npx eslint app src __tests__` and `npx jest` (308 tests) all pass.
+- The working tree is clean and pushed.
+- The OnePlus 7 has the latest debug build installed; the native modules are in sync with `package.json`.
+
+**Machine setup (Linux dev PC, DECISIONS D51)**
+- JDK 17: `export JAVA_HOME=~/.sdkman/candidates/java/17.0.10-tem PATH=$JAVA_HOME/bin:$PATH`. The default `java` is 25 and breaks Gradle.
+- Android SDK: `export ANDROID_HOME=~/Android/Sdk`. `adb` is **not on PATH**; use `~/Android/Sdk/platform-tools/adb`.
+- Native rebuild, only when a native module is added or changed, ~7 min:
+  1. `CI=1 npx expo prebuild --platform android --no-install`
+  2. `cd android && ./gradlew :app:assembleDebug`
+  3. `adb -s <ip:port> install -r android/app/build/outputs/apk/debug/app-debug.apk`
+
+  `npx expo run:android` also works, but it can't tell apart the phone's two adb entries (IP and mDNS).
+- JS-only changes: `npx expo start --dev-client` with `adb reverse tcp:8081 tcp:8081`, then open `exp+snap-spend://expo-development-client/?url=http%3A%2F%2F127.0.0.1%3A8081` via `adb shell am start -a android.intent.action.VIEW -d <url> com.snapspend.app`. Metro reads `.env` only at start-up.
+
+**Phone (OnePlus 7, Android 12)**
+- Already **paired** with this PC over Wireless debugging. The port changes whenever Wireless debugging restarts: find it with `adb mdns services` (`_adb-tls-connect`), then `adb connect <ip:port>`. If nothing is listed, ask the owner to switch Wireless debugging on again.
+- Before sending any `input tap` / `keyevent`, check `adb shell dumpsys window | grep mCurrentFocus` shows `com.snapspend.app`. Once, keystrokes landed in another app (Skrill) the owner had opened.
+- The Back key on a screen without a modal closes the app.
+- The scan queue lives in memory (D59): installing or reloading clears unsaved queue items, so take a screenshot first.
+- After `adb install`, the first `am start` sometimes leaves the launcher in front; run it again.
+
+**Gemini**
+- The key is in `.env` (`EXPO_PUBLIC_GEMINI_API_KEY`, gitignored, dev builds only, D52) or in Settings.
+- Default model `gemini-3.8-flash` (D48). It sometimes returns 503 "high demand" or times out; `gemini-3.6-flash` was a reliable fallback (D61).
+- `docs/SPEC.md` §5 (prompt) and §6 (Daily Log, comma thousands since D57) are contracts with byte-exact tests.
+
+---
+
 ## BLOCKED
 _(empty — write blockers here)_
 
@@ -108,7 +147,7 @@ _(empty — write blockers here)_
      - Editing and saving shows up everywhere. Delete removes the receipt from every screen.
 
 ## Phase 8 — Backup, polish, release APK
-- [ ] Excel (.xlsx) export of items and receipts (owner's choice, replaces CSV, D71), JSON backup export/import (round-trip test); import **merges** by id + `updatedAt` (D44)
+- [x] Excel (.xlsx) export of items and receipts (owner's choice, replaces CSV, D71), JSON backup export/import (round-trip test); import **merges** by id + `updatedAt` (D44)
 - [ ] Store alias + category editors in Settings
 - [ ] Image retention setting: delete receipt images older than Never / 6 months / 1 year; data stays (D46)
 - [ ] Dark/light theme, empty states, loading and error states everywhere
@@ -116,7 +155,9 @@ _(empty — write blockers here)_
 - [ ] _(Deferred by the owner to the end of Phase 8, after the other items)_ Release signing with a local keystore (kept out of git); `cd android && ./gradlew assembleRelease` produces an APK (check the release bundle has no `EXPO_PUBLIC_GEMINI_API_KEY` value, D52)
 - [ ] _(Deferred with release signing)_ Install and smoke-test on **both** S23 Ultra and OnePlus 7 (Android 12)
 - [ ] `README.md`: setup, run, build APK, where the key goes, backup instructions
-- How to verify:
+- How to verify (so far):
+  1. Excel / backup: `__tests__/xlsx.test.ts` (zip parts, sheet names, header / filter / frozen pane, date serials, escaping), `__tests__/exportWorkbook.test.ts` (both sheets' rows), and `__tests__/backup.test.ts` (round trip incl. Daily Log byte-identical; second import changes nothing; newer wins / older loses; deletes travel; local receipts and aliases kept; bad files rejected).
+  2. On the phone (OnePlus 7, 2026-11-28): Settings → Backup & export. **Export to Excel** opens the share sheet. The exported file, pulled from the phone and read with LibreOffice, had all 9 items and 2 receipts correct, and the owner opened it on the phone. **Back up (JSON)** produced a valid v1 backup. **Import backup** of that file worked (owner-verified).
 
 ## Phase 9 — Two-phone cloud sync (DECISIONS D43)
 - [ ] Decide whether receipt images sync too (needs file storage, not Neon) (D46)
