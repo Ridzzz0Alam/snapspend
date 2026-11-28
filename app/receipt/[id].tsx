@@ -23,6 +23,7 @@ import { ImageViewer } from '@/components/ZoomableImage';
 import { File } from 'expo-file-system';
 
 import { db } from '@/db/client';
+import { useNormalizeOptions } from '@/hooks/useLists';
 import { deleteReceipt, getReceipt, updateReceipt, type StoredReceipt } from '@/db/repository';
 import { formatLogDate } from '@/lib/format';
 import { formatFt } from '@/lib/money';
@@ -79,6 +80,7 @@ function DetailForm({
   onSaved: (r: StoredReceipt) => void;
 }) {
   const c = usePalette();
+  const lists = useNormalizeOptions();
   const images = useMemo(() => parseImagePaths(stored.imagePaths), [stored.imagePaths]);
   const [viewer, setViewer] = useState<number | null>(null);
   const [draft, setDraftState] = useState<ReceiptDraft>(() => draftFromStored(stored, randomUUID));
@@ -93,7 +95,7 @@ function DetailForm({
   };
 
   function save() {
-    const result = validateDraft(draft);
+    const result = validateDraft(draft, lists);
     if (!result.ok) {
       setErrors(result.errors);
       setMessage({

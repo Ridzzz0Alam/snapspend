@@ -1,8 +1,13 @@
-/** Settings (SPEC §2.8). Phase 3: Gemini API key, model name, "Test key". */
+/**
+ * Settings (SPEC §2.8): Gemini API key, model name and "Test key"; links to the category and
+ * store-name editors (D73); backup & export.
+ */
+import { router, type Href } from 'expo-router';
 import { useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
+  Pressable,
   ScrollView,
   StyleSheet,
   TextInput,
@@ -15,6 +20,7 @@ import { Text, View } from '@/components/Themed';
 import { Button, usePalette, type Palette } from '@/components/ui';
 import { FONT, MONO_FONT } from '@/constants/fonts';
 import { useGeminiSettings } from '@/hooks/useGeminiSettings';
+import { useCategories, useStoreAliases } from '@/hooks/useLists';
 import { DEFAULT_GEMINI_MODEL, type GeminiResult } from '@/lib/gemini';
 
 type TestState =
@@ -174,11 +180,57 @@ function SettingsForm({ s }: { s: ReturnType<typeof useGeminiSettings> }) {
         </View>
         {test.status === 'done' && <TestResult result={test.result} palette={c} />}
 
+        <ListsSection />
+
         <BackupSection />
 
         {__DEV__ && <DevDataPanel />}
       </ScrollView>
     </KeyboardAvoidingView>
+  );
+}
+
+/** Settings → Lists: rows that open the category and store-name editors. */
+function ListsSection() {
+  const c = usePalette();
+  const categories = useCategories();
+  const aliases = useStoreAliases();
+  return (
+    <View style={[styles.lists, { borderColor: c.border }]}>
+      <Text style={styles.heading}>Lists</Text>
+      <LinkRow
+        title="Categories"
+        detail={`${categories.length} categories`}
+        href="/settings/categories"
+      />
+      <LinkRow
+        title="Store names"
+        detail={`${aliases.length} printed name${aliases.length === 1 ? '' : 's'} renamed`}
+        href="/settings/stores"
+      />
+    </View>
+  );
+}
+
+function LinkRow({ title, detail, href }: { title: string; detail: string; href: Href }) {
+  const c = usePalette();
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`${title}, ${detail}. Open`}
+      onPress={() => router.push(href)}
+      style={({ pressed }) => [
+        styles.link,
+        { backgroundColor: c.field, borderColor: c.border },
+        pressed && { opacity: 0.6 },
+      ]}
+    >
+      <View style={styles.linkText}>
+        <Text style={styles.linkTitle}>{title}</Text>
+        <Text style={[styles.hint, { color: c.muted }]}>{detail}</Text>
+      </View>
+      <Text style={[styles.linkTitle, { color: c.muted }]}>›</Text>
+    </Pressable>
   );
 }
 
@@ -228,5 +280,16 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', gap: 12, flexWrap: 'wrap' },
   hint: { fontSize: 13, lineHeight: 18 },
   resultBox: { gap: 4 },
+  lists: { marginTop: 24, paddingTop: 16, borderTopWidth: StyleSheet.hairlineWidth, gap: 10 },
+  link: {
+    minHeight: 56,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 8,
+    paddingHorizontal: 14,
+  },
+  linkText: { flex: 1, backgroundColor: 'transparent' },
+  linkTitle: { fontSize: 16, fontWeight: '600' },
   result: { fontSize: 15, fontWeight: '600' },
 });

@@ -19,9 +19,10 @@ import { ReceiptForm } from '@/components/ReceiptForm';
 import { Text, View } from '@/components/Themed';
 import { Button, usePalette } from '@/components/ui';
 import { saveReceipt } from '@/hooks/saveReceipt';
+import { useNormalizeOptions } from '@/hooks/useLists';
 import { removeJob, retryJob, useScanJob } from '@/hooks/useScanQueue';
 import { isoFromDate } from '@/lib/dates';
-import { normalizeReceipt } from '@/lib/normalize';
+import { normalizeReceipt, type NormalizeOptions } from '@/lib/normalize';
 import {
   draftFromExtracted,
   emptyDraft,
@@ -58,10 +59,10 @@ export default function ReviewScreen() {
   return <ReviewForm key={job.extracted?.rawJson ?? `failed-${job.id}`} job={job} />;
 }
 
-function initialDraft(job: ScanJob): ReceiptDraft {
+function initialDraft(job: ScanJob, options: NormalizeOptions): ReceiptDraft {
   if (job.extracted) {
     return draftFromExtracted(
-      normalizeReceipt(job.extracted.receipt),
+      normalizeReceipt(job.extracted.receipt, options),
       job.extracted.rawJson,
       randomUUID,
     );
@@ -75,7 +76,8 @@ function initialDraft(job: ScanJob): ReceiptDraft {
 
 function ReviewForm({ job }: { job: ScanJob }) {
   const c = usePalette();
-  const [draft, setDraftState] = useState(() => initialDraft(job));
+  const lists = useNormalizeOptions();
+  const [draft, setDraftState] = useState(() => initialDraft(job, lists));
   const [errors, setErrors] = useState<DraftErrors>({});
   const [saveError, setSaveError] = useState<string | null>(null);
   const [dirty, setDirty] = useState(false);
@@ -86,7 +88,7 @@ function ReviewForm({ job }: { job: ScanJob }) {
   };
 
   function onSave() {
-    const result = validateDraft(draft);
+    const result = validateDraft(draft, lists);
     if (!result.ok) {
       setErrors(result.errors);
       setSaveError(`Fix ${Object.keys(result.errors).length} highlighted field(s) first.`);

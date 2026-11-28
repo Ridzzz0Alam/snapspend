@@ -11,6 +11,13 @@ import {
   listByDateRange,
   updateReceipt,
 } from '@/db/repository';
+import {
+  addCategory,
+  listCategories,
+  listStoreAliases,
+  moveCategory,
+  saveStoreAlias,
+} from '@/db/lists';
 import { receipts, storeAliases } from '@/db/schema';
 import { seedReceipts } from '@/db/seedData';
 import type { AppDatabase } from '@/db/types';
@@ -36,7 +43,8 @@ function seedA() {
 describe('JSON backup round trip', () => {
   it('restores every receipt, item and adjustment exactly (Daily Log identical)', () => {
     seedA();
-    a.insert(storeAliases).values({ raw: 'INTERSPAR', canonical: 'SPAR (Interspar)' }).run();
+    // Both databases start with the default INTERSPAR alias (migration 0003); add one more.
+    a.insert(storeAliases).values({ raw: 'TESCO EXTRA', canonical: 'TESCO' }).run();
 
     const parsed = parseBackup(json(a));
     if (!parsed.ok) throw new Error(parsed.error);
@@ -46,9 +54,8 @@ describe('JSON backup round trip', () => {
     expect(formatDailyLog(everything(b), { grandTotal: true })).toBe(
       formatDailyLog(everything(a), { grandTotal: true }),
     );
-    expect(b.select().from(storeAliases).all()).toEqual([
-      { raw: 'INTERSPAR', canonical: 'SPAR (Interspar)' },
-    ]);
+    expect(listStoreAliases(b)).toEqual(listStoreAliases(a));
+    expect(listCategories(b)).toEqual(listCategories(a));
   });
 
   it('importing the same backup twice changes nothing', () => {
@@ -120,13 +127,8 @@ describe('merge by id + updatedAt (D44)', () => {
   });
 
   it('does not overwrite a local store alias', () => {
-    b.insert(storeAliases).values({ raw: 'INTERSPAR', canonical: 'Interspar (mine)' }).run();
-    a.insert(storeAliases)
-      .values([
-        { raw: 'INTERSPAR', canonical: 'SPAR (Interspar)' },
-        { raw: 'TESCO EXTRA', canonical: 'TESCO' },
-      ])
-      .run();
+    saveStoreAlias(b, { raw: 'INTERSPAR', canonical: 'Interspar (mine)' });
+    a.insert(storeAliases).values({ raw: 'TESCO EXTRA', canonical: 'TESCO' }).run();
     const parsed = parseBackup(json(a));
     if (!parsed.ok) throw new Error(parsed.error);
     mergeBackup(b, parsed.backup);
@@ -134,6 +136,30 @@ describe('merge by id + updatedAt (D44)', () => {
       { raw: 'INTERSPAR', canonical: 'Interspar (mine)' },
       { raw: 'TESCO EXTRA', canonical: 'TESCO' },
     ]);
+  });
+});
+
+describe('categories in the backup (D73)', () => {
+  it('adds categories missing here, before Other, and keeps the local order', () => {
+    addCategory(a, 'Pets');
+    moveCategory(b, 'Bakery', -1);
+    const parsed = parseBackup(json(a));
+    if (!parsed.ok) throw new Error(parsed.error);
+    mergeBackup(b, parsed.backup);
+    const list = listCategories(b);
+    expect(list.slice(0, 2)).toEqual(['Bakery', 'Dairy & Eggs']);
+    expect(list.slice(-2)).toEqual(['Pets', 'Other']);
+  });
+
+  it('adds categories that imported items use even if the list lacks them (old v1 files)', () => {
+    seedA();
+    const data = buildBackup(a, 1);
+    delete data.categories;
+    data.receipts[0]!.items[0]!.category = 'Baby';
+    const parsed = parseBackup(JSON.stringify(data));
+    if (!parsed.ok) throw new Error(parsed.error);
+    mergeBackup(b, parsed.backup);
+    expect(listCategories(b)).toContain('Baby');
   });
 });
 

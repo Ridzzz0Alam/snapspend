@@ -6,6 +6,8 @@
 import { randomUUID } from 'expo-crypto';
 import { useSyncExternalStore } from 'react';
 
+import { db } from '@/db/client';
+import { listCategories } from '@/db/lists';
 import { extractReceipt } from '@/lib/gemini';
 import {
   addJobs,
@@ -81,6 +83,7 @@ async function step(job: ScanJob): Promise<void> {
     apiKey: config.apiKey ?? '',
     model: config.model,
     images: current.pages.map((p) => p.base64),
+    categories: listCategories(db),
   });
   if (!state.jobs.some((j) => j.id === job.id)) return; // discarded while reading
   if (result.ok) dispatch({ type: 'read', id: job.id, extracted: result.value });

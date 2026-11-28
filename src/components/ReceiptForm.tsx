@@ -8,7 +8,7 @@ import { Pressable, StyleSheet } from 'react-native';
 
 import { db } from '@/db/client';
 import { findDuplicates } from '@/db/repository';
-import { DEFAULT_CATEGORIES } from '@/lib/categories';
+import { useCategories, useStoreAliases } from '@/hooks/useLists';
 import { parseDisplayDate } from '@/lib/dates';
 import { formatFt, parseHuf } from '@/lib/money';
 import { applyStoreAlias } from '@/lib/normalize';
@@ -50,6 +50,8 @@ export function ReceiptForm({
   excludeId?: string;
 }) {
   const c = usePalette();
+  const categories = useCategories();
+  const aliases = useStoreAliases();
   const set =
     <K extends keyof ReceiptDraft>(k: K) =>
     (v: ReceiptDraft[K]) =>
@@ -81,13 +83,13 @@ export function ReceiptForm({
     try {
       return findDuplicates(
         db,
-        { store: applyStoreAlias(draft.store), date, printedTotal: total },
+        { store: applyStoreAlias(draft.store, aliases), date, printedTotal: total },
         { excludeId },
       );
     } catch {
       return [];
     }
-  }, [draft.store, draft.date, draft.printedTotal, excludeId]);
+  }, [draft.store, draft.date, draft.printedTotal, excludeId, aliases]);
 
   return (
     <View style={[styles.form, { backgroundColor: 'transparent' }]}>
@@ -163,6 +165,7 @@ export function ReceiptForm({
               errors={errors}
               onChange={updateItem}
               onRemove={removeItem}
+              categories={categories}
             />
           ))}
           <Button
@@ -227,7 +230,9 @@ export function ReceiptForm({
         </>
       )}
 
-      {!showItems && <CategoryField value={draft.category} onChange={set('category')} />}
+      {!showItems && (
+        <CategoryField value={draft.category} onChange={set('category')} categories={categories} />
+      )}
 
       <Field label="Note (optional)" value={draft.note} onChangeText={set('note')} />
     </View>
@@ -240,12 +245,14 @@ const ItemRow = memo(function ItemRow({
   errors,
   onChange,
   onRemove,
+  categories,
 }: {
   item: ItemDraft;
   index: number;
   errors: DraftErrors;
   onChange: (key: string, patch: Partial<ItemDraft>) => void;
   onRemove: (key: string) => void;
+  categories: readonly string[];
 }) {
   const c = usePalette();
   const [picking, setPicking] = useState(false);
@@ -312,7 +319,7 @@ const ItemRow = memo(function ItemRow({
       <Picker
         label="Category"
         value={item.category}
-        options={DEFAULT_CATEGORIES}
+        options={categories}
         onChange={(category) => onChange(item.key, { category })}
         visible={picking}
         setVisible={setPicking}
@@ -323,7 +330,15 @@ const ItemRow = memo(function ItemRow({
 
 const NO_CATEGORY = '(none)';
 
-function CategoryField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+function CategoryField({
+  value,
+  onChange,
+  categories,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  categories: readonly string[];
+}) {
   const c = usePalette();
   const [picking, setPicking] = useState(false);
   return (
@@ -332,7 +347,7 @@ function CategoryField({ value, onChange }: { value: string; onChange: (v: strin
       <Picker
         label="Category"
         value={value || NO_CATEGORY}
-        options={[NO_CATEGORY, ...DEFAULT_CATEGORIES]}
+        options={[NO_CATEGORY, ...categories]}
         onChange={(v) => onChange(v === NO_CATEGORY ? '' : v)}
         visible={picking}
         setVisible={setPicking}

@@ -67,8 +67,8 @@ export function BackupSection() {
         />
       </View>
       <Text style={[styles.hint, { color: c.muted }]}>
-        The backup holds all receipts, items and store aliases (not the photos). Save it to Google
-        Drive or your files; import it on this or another phone to merge.
+        The backup holds all receipts, items, categories and store names (not the photos). Save it
+        to Google Drive or your files; import it on this or another phone to merge.
       </Text>
 
       {busy && <ActivityIndicator />}

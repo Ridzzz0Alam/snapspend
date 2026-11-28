@@ -95,6 +95,8 @@ function RootLayoutNav() {
           <Stack.Screen name="expense/new" options={{ title: 'Add expense' }} />
           <Stack.Screen name="item/[key]" options={{ title: 'Price history' }} />
           <Stack.Screen name="receipt/[id]" options={{ title: 'Receipt' }} />
+          <Stack.Screen name="settings/categories" options={{ title: 'Categories' }} />
+          <Stack.Screen name="settings/stores" options={{ title: 'Store names' }} />
         </Stack>
       </ThemeProvider>
     </GestureHandlerRootView>

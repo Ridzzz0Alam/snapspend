@@ -171,3 +171,11 @@ Decisions already made. Don't re-litigate; add new entries at the bottom with a 
   - Import is checked with zod (whole-forint money, known enums). It rejects non-backups and files from a newer version.
   - Merge happens in one transaction (D44): a missing receipt is added; an existing one is replaced only if the backup's `updatedAt` is newer, children included; otherwise it's left alone. Store aliases are added when missing; local ones win.
   - Import uses `File.pickFileAsync` from `expo-file-system`, so no extra native module is needed.
+- **D73. Category list and store-name editors.**
+  - Categories now live in a `categories` table (name, position), seeded with the SPEC §3 defaults by migration `0003_categories`, which also adds the default INTERSPAR → SPAR (Interspar) alias. Before this, nothing read the `store_aliases` table; every screen used the built-in defaults.
+  - Each list has its own screen, opened from Settings → Lists: **Categories** (add, rename, delete, move ↑↓) and **Store names** (add, edit, remove).
+  - A new category goes just before "Other". **"Other" can't be renamed or deleted**, because unknown categories from Gemini fall back to it.
+  - Renaming a category also renames it on every item and receipt-level category. Deleting moves those to "Other", after a confirmation that shows how many items it affects. The affected receipts get a new `updatedAt`, so the change wins a backup merge or a sync (D44).
+  - After saving a store name, if any saved receipts still use the printed name, the app asks whether to rename them too. Matching ignores capitals and extra spaces, the same rule `applyStoreAlias` uses. Removing a store name never changes saved receipts.
+  - The live lists go to the Gemini prompt (read when each scan starts), the Review, Add expense and Receipt detail forms (validation, duplicate check, category pickers) and the Items category filter.
+  - The JSON backup has an optional `categories` array (still version 1, so older files import). On import, missing categories are added before "Other"; the local list and order win. Categories used by imported items are added even if the file's list doesn't have them.

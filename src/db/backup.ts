@@ -1,13 +1,14 @@
 /**
  * JSON backup (Phase 8, D72). The backup holds every receipt, including soft-deleted ones (so a
  * delete reaches the other phone), with items, adjustments and store aliases. Receipt photos
- * are not included. Import **merges** (D44): a receipt is added if missing, replaced if the
+ * are not included; the category list is (D73). Import **merges** (D44): a receipt is added if missing, replaced if the
  * backup's copy has a newer `updatedAt`, otherwise left alone. Store aliases are added when
  * missing; local ones are kept.
  */
 import { asc, eq } from 'drizzle-orm';
 import { z } from 'zod';
 
+import { addMissingCategories, listCategories } from './lists';
 import { adjustments, items, receipts, storeAliases } from './schema';
 import type { AppDatabase } from './types';
 
@@ -66,6 +67,8 @@ const backupSchema = z.object({
   exportedAt: int,
   receipts: z.array(receiptSchema),
   storeAliases: z.array(z.object({ raw: z.string(), canonical: z.string() })),
+  /** The category list in order (D73). Optional: older v1 backups don't have it. */
+  categories: z.array(z.string()).optional(),
 });
 
 export type Backup = z.infer<typeof backupSchema>;
@@ -96,6 +99,7 @@ export function buildBackup(db: AppDatabase, now: number = Date.now()): Backup {
     exportedAt: now,
     receipts: [...byReceipt.values()],
     storeAliases: db.select().from(storeAliases).all(),
+    categories: listCategories(db),
   };
 }
 
@@ -170,6 +174,13 @@ export function mergeBackup(db: AppDatabase, backup: Backup): MergeResult {
     for (const alias of backup.storeAliases) {
       tx.insert(storeAliases).values(alias).onConflictDoNothing().run();
     }
+    // Categories missing here are added (local list and order win), including any that the
+    // backup's items use but its list doesn't have, so every item's category is in the list.
+    const used = backup.receipts.flatMap((r) => [
+      ...(r.category ? [r.category] : []),
+      ...r.items.map((it) => it.category),
+    ]);
+    addMissingCategories(tx, [...(backup.categories ?? []), ...used]);
   });
   return result;
 }

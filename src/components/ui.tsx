@@ -65,6 +65,37 @@ export function Button({
   );
 }
 
+/** A compact 44dp-tall symbol button (↑ ↓ ✎ ✕) for list rows; always give it a spoken label. */
+export function IconButton({
+  label,
+  accessibilityLabel,
+  onPress,
+  disabled,
+  danger,
+}: {
+  label: string;
+  accessibilityLabel: string;
+  onPress: () => void;
+  disabled?: boolean;
+  danger?: boolean;
+}) {
+  const c = usePalette();
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      accessibilityState={{ disabled: !!disabled }}
+      disabled={disabled}
+      onPress={onPress}
+      style={({ pressed }) => [styles.icon, (pressed || disabled) && styles.faint]}
+    >
+      <Text style={{ fontSize: 18, fontWeight: '700', color: danger ? c.error : c.text }}>
+        {label}
+      </Text>
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
   button: {
     minHeight: 44,
@@ -75,5 +106,7 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
   },
   dim: { opacity: 0.5 },
+  faint: { opacity: 0.3 },
+  icon: { width: 40, height: 44, alignItems: 'center', justifyContent: 'center' },
   buttonText: { fontWeight: '600', fontSize: 15 },
 });

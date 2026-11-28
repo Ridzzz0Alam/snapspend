@@ -14,8 +14,8 @@ import { Button, usePalette } from '@/components/ui';
 import { FONT } from '@/constants/fonts';
 import { db } from '@/db/client';
 import { listItems, listStores, type ItemListRow, type ItemSortKey } from '@/db/repository';
+import { useCategories } from '@/hooks/useLists';
 import { useReceiptsVersion } from '@/hooks/useReceiptsVersion';
-import { DEFAULT_CATEGORIES } from '@/lib/categories';
 import { isoFromDate } from '@/lib/dates';
 import { formatLogDate } from '@/lib/format';
 import { formatFt } from '@/lib/money';
@@ -268,6 +268,7 @@ function FilterSheet({
   version: string;
 }) {
   const c = usePalette();
+  const categories = useCategories();
   const stores = useMemo(() => {
     void version;
     return visible ? listStores(db) : [];
@@ -334,7 +335,7 @@ function FilterSheet({
 
           <Text style={styles.sheetHeading}>Categories</Text>
           <View style={[styles.wrap, { backgroundColor: 'transparent' }]}>
-            {DEFAULT_CATEGORIES.map((cat) => (
+            {categories.map((cat) => (
               <Chip
                 key={cat}
                 label={cat}

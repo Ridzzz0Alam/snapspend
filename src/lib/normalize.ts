@@ -39,6 +39,29 @@ export function applyStoreAlias(
   return hit ? hit.canonical : cleaned;
 }
 
+/**
+ * Checks a store alias before saving: both names filled in, different, and the raw name not
+ * already used by another alias (case- and whitespace-insensitive). `currentRaw` is the alias
+ * being edited. Returns an error message, or null when it's fine.
+ */
+export function checkStoreAlias(
+  raw: string,
+  canonical: string,
+  existing: readonly StoreAlias[],
+  currentRaw?: string,
+): { raw?: string; canonical?: string } | null {
+  const r = collapse(raw);
+  const c = collapse(canonical);
+  const errors: { raw?: string; canonical?: string } = {};
+  if (!r) errors.raw = 'Enter the name as printed';
+  if (!c) errors.canonical = 'Enter the name to show';
+  if (r && c && r.toLowerCase() === c.toLowerCase()) errors.canonical = 'Same as the printed name';
+  const key = r.toLowerCase();
+  const clash = existing.find((a) => collapse(a.raw).toLowerCase() === key && a.raw !== currentRaw);
+  if (r && clash) errors.raw = `Already mapped to "${clash.canonical}"`;
+  return errors.raw || errors.canonical ? errors : null;
+}
+
 export interface NormalizedItem extends GeminiLineItem {
   position: number;
   normalizedKey: string;

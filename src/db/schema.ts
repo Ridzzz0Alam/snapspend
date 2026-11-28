@@ -79,6 +79,12 @@ export const storeAliases = sqliteTable('store_aliases', {
   canonical: text('canonical').notNull(),
 });
 
+/** The user's category list (SPEC §2.8), in display order. Seeded with the SPEC §3 defaults (D73). */
+export const categories = sqliteTable('categories', {
+  name: text('name').primaryKey(),
+  position: integer('position').notNull(),
+});
+
 export type ReceiptRow = typeof receipts.$inferSelect;
 export type ItemRow = typeof items.$inferSelect;
 export type AdjustmentRow = typeof adjustments.$inferSelect;

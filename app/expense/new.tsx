@@ -13,12 +13,14 @@ import { Text, View } from '@/components/Themed';
 import { Button, usePalette } from '@/components/ui';
 import { saveReceipt } from '@/hooks/saveReceipt';
 import { isoFromDate } from '@/lib/dates';
+import { useNormalizeOptions } from '@/hooks/useLists';
 import { emptyDraft, validateDraft, type DraftErrors, type ReceiptDraft } from '@/lib/reviewDraft';
 import type { CompressedPage } from '@/lib/scanQueue';
 import { compressPage, deleteTempFiles } from '@/media/receiptImages';
 
 export default function NewExpenseScreen() {
   const c = usePalette();
+  const lists = useNormalizeOptions();
   const [draft, setDraftState] = useState<ReceiptDraft>(() =>
     emptyDraft('manual', isoFromDate(new Date())),
   );
@@ -51,7 +53,7 @@ export default function NewExpenseScreen() {
   }
 
   function onSave() {
-    const result = validateDraft({ ...draft, kind: photo ? 'total_only' : 'manual' });
+    const result = validateDraft({ ...draft, kind: photo ? 'total_only' : 'manual' }, lists);
     if (!result.ok) {
       setErrors(result.errors);
       setMessage(`Fix ${Object.keys(result.errors).length} highlighted field(s) first.`);
